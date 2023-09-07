@@ -58,10 +58,6 @@ class Tensor:
         self.grad = self.zero_grad() if requires_grad else None # gradient of data, if needed
         self.is_scalar = self.data.ndim == 0 # whether the data is a scalar
 
-    # Constructor Methods =========================================
-    def zero_grad(self):
-        self.grad = np.zeros_like(self.data)
-
     # Basic Operations ============================================
     def __add__(self, other):
         if not isinstance(other, Tensor):
@@ -138,13 +134,46 @@ class Tensor:
             return self # can't std a scalar
         return Tensor(self.data.std(axis=axis))
     
-    # Others ==================================================
+    # Shape Operations ==================================================
     def reshape(self, *new_shape):
         return Tensor(self.data.reshape(new_shape))
     
+    def squeeze(self, axis=None):
+        return Tensor(self.data.squeeze(axis=axis))
+    
+    def unsqueeze(self, axis=None):
+        return Tensor(self.data.expand_dims(axis=axis))
+
+    def transpose(self, axes=None):
+        return Tensor(np.transpose(self.data, axes))
+    
+    # Indexing Operations ================================================
+    def __getitem__(self, index):
+        return Tensor(self.data[index])
+    
+    def __setitem__(self, index, value):
+        self.data[index] = value if isinstance(value, Tensor) else Tensor(value)
+
+    # Utility Methods ====================================================
+    def zero_grad(self):
+        self.grad = np.zeros_like(self.data)
+
+    def clone(self):
+        return Tensor(self.data.copy(), self.requires_grad)
+    
+    def detach(self):
+        return Tensor(self.data, requires_grad=False)
+    
+    def to(self, device):
+        # TODO: Implement device transfer
+        # Here is where device transfer would go. NumPy arrays are always on the CPU, so this is a placeholder
+        self.device = device
+        return self
+    
+    # Other Methods =======================================================
     @property
-    def T(self):
-        return np.transpose(self.data)
+    def T(self, axes=None):
+        return self.transpose(axes=axes)
 
     def __eq__(self, other):
         if not isinstance(other, Tensor):
