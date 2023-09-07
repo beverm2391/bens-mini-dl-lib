@@ -36,6 +36,7 @@ class Dense(Layer):
     def forward(self, input_data):
         self.input = input_data
         self.output = input_data @ self.weights + self.biases # o = xW + b
+        print(f"Output type {type(self.output)}")
         return self.output
     
     def backward(self, output_gradient):

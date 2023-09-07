@@ -80,6 +80,11 @@ class Tensor:
             other = Tensor(other)
         return Tensor(self.data / other.data)
     
+    def __pow__(self, other):
+        if not isinstance(other, Tensor):
+            other = Tensor(other)
+        return Tensor(self.data ** other.data)
+    
     def __matmul__(self, other):
         if self.is_scalar:
             return Tensor(self.data * other.data)
@@ -154,8 +159,8 @@ class Tensor:
     def squeeze(self, axis=None):
         return Tensor(self.data.squeeze(axis=axis))
     
-    def unsqueeze(self, axis=None):
-        return Tensor(self.data.expand_dims(axis=axis))
+    def unsqueeze(self, axis):
+        return Tensor(np.expand_dims(self.data, axis=axis))
 
     def transpose(self, axes=None):
         return Tensor(np.transpose(self.data, axes))
@@ -168,6 +173,12 @@ class Tensor:
         self.data[index] = value if isinstance(value, Tensor) else Tensor(value)
 
     # Utility Methods ====================================================
+    def _broadcast_tensors(self, other):
+        if not isinstance(other, Tensor):
+            other = Tensor(other)
+        a_shape, b_shape = np.broadcast_arrays(self.data, other.data).shape
+        return Tensor(self.data * np.ones(a_shape)), Tensor(other.data * np.ones(b_shape))
+
     def zero_grad(self):
         self.grad = np.zeros_like(self.data)
 
