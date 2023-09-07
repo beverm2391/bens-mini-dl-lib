@@ -189,6 +189,47 @@ class Tensor:
             return self # can't std a scalar
         return Tensor(self.data.std(axis=axis))
     
+    # Comparison Operations =======================================
+    def __gt__(self, other):
+        if isinstance(other, (int, float)):
+            return Tensor(self.data > other)
+        elif isinstance(other, Tensor):
+            if self.data.shape != other.data.shape:
+                raise ValueError("Shape mismatch")
+            return Tensor(self.data > other.data)
+        else:
+            raise TypeError("Unsupported type for comparison")
+
+    def __lt__(self, other):
+        if isinstance(other, (int, float)):
+            return Tensor(self.data < other)
+        elif isinstance(other, Tensor):
+            if self.data.shape != other.data.shape:
+                raise ValueError("Shape mismatch")
+            return Tensor(self.data < other.data)
+        else:
+            raise TypeError("Unsupported type for comparison")
+
+    def __ge__(self, other):
+        if isinstance(other, (int, float)):
+            return Tensor(self.data >= other)
+        elif isinstance(other, Tensor):
+            if self.data.shape != other.data.shape:
+                raise ValueError("Shape mismatch")
+            return Tensor(self.data >= other.data)
+        else:
+            raise TypeError("Unsupported type for comparison")
+
+    def __le__(self, other):
+        if isinstance(other, (int, float)):
+            return Tensor(self.data <= other)
+        elif isinstance(other, Tensor):
+            if self.data.shape != other.data.shape:
+                raise ValueError("Shape mismatch")
+            return Tensor(self.data <= other.data)
+        else:
+            raise TypeError("Unsupported type for comparison")
+
     # Shape Operations ==================================================
     def reshape(self, *new_shape):
         return Tensor(self.data.reshape(new_shape))
@@ -235,6 +276,13 @@ class Tensor:
     @property
     def T(self, axes=None):
         return self.transpose(axes=axes)
+    
+    @property
+    def size(self):
+        s = 1
+        for dim in self.shape:
+            s *= dim
+        return s
 
     def __eq__(self, other):
         if not isinstance(other, Tensor):

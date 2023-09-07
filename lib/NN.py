@@ -14,10 +14,9 @@ class NeuralNetwork:
             x = layer.forward(x)
         return x
     
-    def backward(self):
-        grad = self.loss.backward()
+    def backward(self, loss_gradient):
         for layer in reversed(self.layers):
-            grad = layer.backward(grad)
+            grad = layer.backward(loss_gradient)
 
     def __call__(self, x, *args, **kwargs):
         return self.forward(x, *args, **kwargs)
