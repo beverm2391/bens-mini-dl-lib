@@ -1,4 +1,5 @@
 import numpy as np
+import warnings
 
 # ! Old Tensor class, kept for reference
 class TensorV1:
@@ -84,6 +85,18 @@ class Tensor:
             return Tensor(self.data * other.data)
         if not isinstance(other, Tensor):
             other = Tensor(other)
+        
+        if self.data.ndim == 0 and other.data.ndim == 0: # if both are scalars
+            warnings.warn("Both of your inputs are scalars. Using element-wise multiplication instead. Use the * operator insead of @.")
+            return self.data * other.data
+        
+        if self.data.ndim == 0 and other.data.ndim > 0: # if self is a scalar and other is not
+            warnings.warn("One of your inputs is a scalar. Using element-wise multiplication instead. Use the * operator insead of @.")
+            return Tensor(self.data * other.data)
+        
+        if self.data.ndim > 0 and other.data.ndim == 0: # if self is not a scalar and other is
+            warnings.warn("One of your inputs is a scalar. Using element-wise multiplication instead. Use the * operator insead of @.")
+            return Tensor(self.data * other.data)
         
         # v * v
         if self.data.ndim == 1 and other.data.ndim == 1: # if both are vectors

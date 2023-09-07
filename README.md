@@ -7,6 +7,12 @@ I'm building this mini DL framework to get a better understanding of how things 
 This adds a .pth file to the site-packages directory containing the project's root dir. This allows for absolute imports anywhere without having to install the package or use sys.path.append(). Using this right now because I know it works, but I plan to try `pip install --editable .` in the future.
 
 ## TODO
+- [ ] Finish Tensor tests
+  - [ ] Reduction ops
+  - [ ] Shape
+  - [ ] Indexing
+  - [ ] Utility
+  - [ ] Other
 - [ ] Find some way to write tests for the activation functions
 - [ ] Add loss functions
 - [ ] Add a network class
