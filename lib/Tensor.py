@@ -61,25 +61,37 @@ class Tensor:
 
     # Basic Operations ============================================
     def __add__(self, other):
-        if not isinstance(other, Tensor):
-            other = Tensor(other)
-        return Tensor(self.data + other.data)
-    
+        if isinstance(other, (int, float)):
+            return Tensor(self.data + other)
+        elif isinstance(other, Tensor):
+            return Tensor(self.data + other.data)
+        else:
+            raise ValueError(f"Unsupported type for addition: {type(other)}")
+
     def __sub__(self, other):
-        if not isinstance(other, Tensor):
-            other = Tensor(other)
-        return Tensor(self.data - other.data)
+        if isinstance(other, (int, float)):
+            return Tensor(self.data - other)
+        elif isinstance(other, Tensor):
+            return Tensor(self.data - other.data)
+        else:
+            raise ValueError(f"Unsupported type for subtraction: {type(other)}")
 
     def __mul__(self, other):
-        if not isinstance(other, Tensor):
-            other = Tensor(other)
-        return Tensor(self.data * other.data)
+        if isinstance(other, (int, float)):
+            return Tensor(self.data * other)
+        elif isinstance(other, Tensor):
+            return Tensor(self.data * other.data)
+        else:
+            raise ValueError(f"Unsupported type for multiplication: {type(other)}")
 
     def __truediv__(self, other):
-        if not isinstance(other, Tensor):
-            other = Tensor(other)
-        return Tensor(self.data / other.data)
-    
+        if isinstance(other, (int, float)):
+            return Tensor(self.data / other)
+        elif isinstance(other, Tensor):
+            return Tensor(self.data / other.data)
+        else:
+            raise ValueError(f"Unsupported type for division: {type(other)}")
+
     def __pow__(self, other):
         if not isinstance(other, Tensor):
             other = Tensor(other)
