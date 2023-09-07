@@ -138,6 +138,31 @@ class Tensor:
         result = np.matmul(self.data, other.data)
         return Tensor(result)
     
+    # Reverse Operations ============================================
+    def __radd__(self, other):
+        return self.__add__(other)
+
+    def __rsub__(self, other):
+        return Tensor(other - self.data)  # Note the order
+
+    def __rmul__(self, other):
+        return self.__mul__(other)
+
+    def __rtruediv__(self, other):
+        return Tensor(other / self.data)  # Note the order
+    
+    def __rpow__(self, other):
+        return Tensor(other ** self.data)
+    
+    def __rmatmul__(self, other):
+        if not isinstance(other, Tensor):
+            other = Tensor(other)
+        # The other array should be on the left-hand side now
+        # assuming self.data and other.data are NumPy arrays
+        result = np.matmul(other.data, self.data)
+        return Tensor(result)
+
+    
     # Reduction Operations ========================================
     def sum(self, axis=None):
         if self.is_scalar:
