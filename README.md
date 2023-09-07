@@ -16,7 +16,7 @@ This adds a .pth file to the site-packages directory containing the project's ro
   - [ ] Utility
   - [ ] Other
 - [ ] Find some way to write tests for the activation functions
-- [ ] Add loss functions
+- [X] Add basic loss functions
 - [ ] Add a network class
 - [ ] Add a training loop
 - [ ] Add data handling
