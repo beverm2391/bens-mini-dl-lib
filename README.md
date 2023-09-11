@@ -24,3 +24,4 @@ This adds a .pth file to the site-packages directory containing the project's ro
 - [ ] Add optimizers
 - [ ] Add regularization
 - [ ] Add examples and docs
+- [ ] Look into [this](https://vmartin.fr/automatic-jacobian-matrix-computation-with-sympy.html) jacobian matrix optimization
