@@ -1,124 +1,102 @@
 import numpy as np
 import warnings
 
+# ! Old Tensor class, kept for reference
+class TensorV1:
+    def __init__(self, data):
+        self.data = np.array(data)
+        self.shape = self.data.shape
+
+        assert self.data.ndim > 0, "Tensor must have at least one dimension (can't be Scalar)."
+
+    # Other refers to the other tensor
+    def __add__(self, other):
+        if not isinstance(other, TensorV1):
+            return TensorV1(self.data + other)
+        return TensorV1(self.data + other.data) # element-wise addition
+
+    def __sub__(self, other):
+        if not isinstance(other, TensorV1):
+            return TensorV1(self.data - other)
+        return TensorV1(self.data - other.data) # element-wise subtraction
+    
+    def __mul__(self, other):
+        if not isinstance(other, TensorV1):
+            return TensorV1(self.data * other)
+        return TensorV1(self.data * other.data) # element-wise multiplication
+
+    def __matmul__(self, other): # matrix multiplication
+        # Make sure that the other is a tensor
+        # This ensures neither are scalar because the Tensor class wont accept scalars
+        if not isinstance(other, TensorV1):
+            raise TypeError("The 'other' must be an instance of Tensor.")
+        
+        # check if the last dimension of self is equal to the second last dimension of other (if neither are vectors)
+        if self.data.ndim > 1 and other.data.ndim > 1:
+            if self.data.shape[-1] != other.data.shape[-2]:
+                raise ValueError(f"Cannot perform matrix multiplication on tensors with shapes {self.data.shape} and {other.data.shape}.")
+
+        result_data = np.matmul(self.data, other.data)
+
+        if np.array(result_data).ndim == 0: # if the result is a scalar, return it (because the Tensor class wont accept scalars)
+            return result_data
+
+        return TensorV1(result_data)
+
+    @property
+    def T(self):
+        return np.transpose(self.data)
+    
+    def __repr__(self):
+        return f"Tensor({self.data.__repr__()})"
+
+# ! Current Tensor class
 class Tensor:
-    def __init__(self, data, requires_grad=True, parents=None, creation_op=None):
+    def __init__(self, data, requires_grad=True):
         self.data = np.array(data) # data
         self.shape = self.data.shape # shape of data
         self.requires_grad = requires_grad # whether to calculate gradients
-        self.parents = parents or []
-        self.creation_op = creation_op
         self.grad = self.zero_grad() if requires_grad else None # gradient of data, if needed
         self.is_scalar = self.data.ndim == 0 # whether the data is a scalar
-
-    def zero_grad(self):
-        return Tensor(np.zeros_like(self.data))
-    
-    def backward(self, grad=None):
-        if not self.requires_grad: # if this tensor doesn't require gradients, return
-            return
-        if grad is None and self.grad is None:
-            # if self is a leaf node, we can start from 1
-            grad = Tensor(np.ones_like(self.data))
-        if self.grad is None:
-            self.grad = grad
-        else:
-            self.grad += grad # if self is a leaf node, we accumulate gradients
-
-        # time to backpropogate
-        if self.creation_op == 'add':
-            self.parents[0].backward(self.grad)
-            self.parents[1].backward(self.grad)
-        elif self.creation_op == 'sub':
-            self.parents[0].backward(self.grad)
-            self.parents[1].backward(-self.grad)
-        elif self.creation_op == 'mul':
-            self.parents[0].backward(self.grad * self.parents[1])
-            self.parents[1].backward(self.grad * self.parents[0])
-        elif self.creation_op == 'div':
-            self.parents[0].backward(self.grad / self.parents[1])
-            self.parents[1].backward(-self.grad * self.parents[0] / self.parents[1] ** 2)
-        elif self.creation_op == 'pow':
-            self.parents[0].backward(self.grad * self.parents[1].data * (self.parents[0].data ** (self.parents[1].data - 1)))
-            self.parents[1].backward(self.grad * (self.parents[0].data ** self.parents[1].data) * np.log(self.parents[0].data))
-        elif self.creation_op == 'matmul':
-            self.parents[0].backward(grad @ self.parents[1].data.T)
-            self.parents[1].backward(self.parents[0].data.T @ grad)
-        elif self.creation_op == 'neg':
-            self.parents[0].backward(-self.grad)
-        elif self.creation_op == 'transpose':
-            self.parents[0].backward(self.grad.T)
-        elif self.creation_op == 'abs':
-            self.parents[0].backward(self.grad * np.sign(self.parents[0].data))
-        elif self.creation_op == 'sum':
-            self.parents[0].backward(self.grad * np.ones_like(self.parents[0].data))
-        elif self.creation_op == 'mean':
-            self.parents[0].backward(self.grad * np.ones_like(self.parents[0].data) / np.size(self.parents[0].data))
-        elif self.creation_op == 'max':
-            self.parents[0].backward(self.grad * (self.parents[0].data == self.data))
-        elif self.creation_op == 'min':
-            self.parents[0].backward(self.grad * (self.parents[0].data == self.data))
-        elif self.creation_op == 'std':
-            mean_val = np.mean(self.parents[0].data)
-            N = self.parents[0].data.size
-            self.parents[0].backward(self.grad * (self.parents[0].data - mean_val) / (self.data * np.sqrt(N)))
-        elif self.creation_op == 'reshape':
-            self.parents[0].backward(self.grad.reshape(self.parents[0].shape)) # reshape to the shape of the parent
-        elif self.creation_op == 'squeeze':
-            axis = self.meta_info['axis']
-            if axis is not None:
-                grad_expanded = np.expand_dims(grad, axis=axis)
-            else:
-                grad_expanded = grad
-            self.parents[0].backward(grad_expanded)
-        elif self.creation_op == 'unsqueeze':
-            axis = self.meta_info['axis']
-            self.parents[0].backward(np.squeeze(grad, axis=axis))
-        else:
-            raise NotImplementedError(f"Gradient for {self.creation_op} not implemented")
-        # TODO: add broadcasting, indexing
 
     # Basic Operations ============================================
     def __add__(self, other):
         if isinstance(other, (int, float)):
-            return Tensor(self.data + other, requires_grad=True, parents=[self, other], creation_op='add')
+            return Tensor(self.data + other)
         elif isinstance(other, Tensor):
-            return Tensor(self.data + other.data, requires_grad=True, parents=[self, other], creation_op='add')
+            return Tensor(self.data + other.data)
         else:
             raise ValueError(f"Unsupported type for addition: {type(other)}")
-        
+
     def __sub__(self, other):
         if isinstance(other, (int, float)):
-            return Tensor(self.data - other, requires_grad=True, parents=[self, other], creation_op='sub')
+            return Tensor(self.data - other)
         elif isinstance(other, Tensor):
-            return Tensor(self.data - other.data, requires_grad=True, parents=[self, other], creation_op='sub')
+            return Tensor(self.data - other.data)
         else:
             raise ValueError(f"Unsupported type for subtraction: {type(other)}")
-        
+
     def __mul__(self, other):
         if isinstance(other, (int, float)):
-            return Tensor(self.data * other, requires_grad=True, parents=[self, other], creation_op='mul')
+            return Tensor(self.data * other)
         elif isinstance(other, Tensor):
-            return Tensor(self.data * other.data, requires_grad=True, parents=[self, other], creation_op='mul')
+            return Tensor(self.data * other.data)
         else:
             raise ValueError(f"Unsupported type for multiplication: {type(other)}")
-        
+
     def __truediv__(self, other):
         if isinstance(other, (int, float)):
-            return Tensor(self.data / other, requires_grad=True, parents=[self, other], creation_op='div')
+            return Tensor(self.data / other)
         elif isinstance(other, Tensor):
-            return Tensor(self.data / other.data, requires_grad=True, parents=[self, other], creation_op='div')
+            return Tensor(self.data / other.data)
         else:
             raise ValueError(f"Unsupported type for division: {type(other)}")
-        
+
     def __pow__(self, other):
-        if isinstance(other, (int, float)):
-            return Tensor(self.data ** other, requires_grad=True, parents=[self, other], creation_op='pow')
-        elif isinstance(other, Tensor):
-            return Tensor(self.data ** other.data, requires_grad=True, parents=[self, other], creation_op='pow')
-        else:
-            raise ValueError(f"Unsupported type for power: {type(other)}")
-        
+        if not isinstance(other, Tensor):
+            other = Tensor(other)
+        return Tensor(self.data ** other.data)
+    
     def __matmul__(self, other):
         if self.is_scalar:
             return Tensor(self.data * other.data)
@@ -131,11 +109,11 @@ class Tensor:
         
         if self.data.ndim == 0 and other.data.ndim > 0: # if self is a scalar and other is not
             warnings.warn("One of your inputs is a scalar. Using element-wise multiplication instead. Use the * operator insead of @.")
-            return Tensor(self.data * other.data, requires_grad=True, parents=[self, other], creation_op='mul')
+            return Tensor(self.data * other.data)
         
         if self.data.ndim > 0 and other.data.ndim == 0: # if self is not a scalar and other is
             warnings.warn("One of your inputs is a scalar. Using element-wise multiplication instead. Use the * operator insead of @.")
-            return Tensor(self.data * other.data, requires_grad=True, parents=[self, other], creation_op='mul')
+            return Tensor(self.data * other.data)
         
         # v * v
         if self.data.ndim == 1 and other.data.ndim == 1: # if both are vectors
@@ -158,7 +136,7 @@ class Tensor:
                 raise ValueError(f"Cannot perform matrix multiplication on tensors with shapes {self.data.shape} and {other.data.shape}.")
 
         result = np.matmul(self.data, other.data)
-        return Tensor(result, requires_grad=True, parents=[self, other], creation_op='matmul')
+        return Tensor(result)
     
     # Reverse Operations ============================================
     def __radd__(self, other):
@@ -183,55 +161,32 @@ class Tensor:
         # assuming self.data and other.data are NumPy arrays
         result = np.matmul(other.data, self.data)
         return Tensor(result)
-    
-    # Unary Operations ============================================
-    def __neg__(self):
-        return self * -1
-    
-    def __abs__(self):
-        return Tensor(np.abs(self.data), requires_grad=self.requires_grad, parents=[self], creation_op='abs')
-    
+
     # Reduction Operations ========================================
     def sum(self, axis=None):
         if self.is_scalar:
             return self # can't sum a scalar
-        return Tensor(self.data.sum(axis=axis), requires_grad=self.requires_grad, parents=[self], creation_op='sum')
+        return Tensor(self.data.sum(axis=axis))
 
     def mean(self, axis=None):
         if self.is_scalar:
             return self # can't mean a scalar
-        return Tensor(self.data.mean(axis=axis), requires_grad=self.requires_grad, parents=[self], creation_op='mean')
+        return Tensor(self.data.mean(axis=axis))
         
     def max(self, axis=None):
         if self.is_scalar:
             return self # can't max a scalar
-        return Tensor(self.data.max(axis=axis), requires_grad=self.requires_grad, parents=[self], creation_op='max')
+        return Tensor(self.data.max(axis=axis))
         
     def min(self, axis=None):
         if self.is_scalar:
             return self # can't min a scalar
-        return Tensor(self.data.min(axis=axis), requires_grad=self.requires_grad, parents=[self], creation_op='min')
+        return Tensor(self.data.min(axis=axis))
     
     def std(self, axis=None):
         if self.is_scalar:
             return self # can't std a scalar
-        return Tensor(self.data.std(axis=axis), requires_grad=self.requires_grad, parents=[self], creation_op='std')
-    
-    # Shape Operations ==================================================
-    def reshape(self, *new_shape):
-        return Tensor(self.data.reshape(new_shape), requires_grad=self.requires_grad, parents=[self], creation_op='reshape', \
-                    meta_info = {"original_shape" : self.shape})
-    
-    def squeeze(self, axis=None):
-        return Tensor(self.data.squeeze(axis=axis), requires_grad=self.requires_grad, parents=[self], creation_op='squeeze', \
-                        meta_info = {"axis" : axis} if axis is not None else None)
-    
-    def unsqueeze(self, axis):
-        return Tensor(np.expand_dims(self.data, axis=axis), requires_grad=self.requires_grad, parents=[self], creation_op='unsqueeze', \
-                        meta_info = {"axis" : axis})
-
-    def transpose(self, axes=None):
-        return Tensor(np.transpose(self.data, axes), requires_grad=self.requires_grad, parents=[self], creation_op='transpose')
+        return Tensor(self.data.std(axis=axis))
     
     # Comparison Operations =======================================
     def __gt__(self, other):
@@ -274,6 +229,19 @@ class Tensor:
         else:
             raise TypeError("Unsupported type for comparison")
 
+    # Shape Operations ==================================================
+    def reshape(self, *new_shape):
+        return Tensor(self.data.reshape(new_shape))
+    
+    def squeeze(self, axis=None):
+        return Tensor(self.data.squeeze(axis=axis))
+    
+    def unsqueeze(self, axis):
+        return Tensor(np.expand_dims(self.data, axis=axis))
+
+    def transpose(self, axes=None):
+        return Tensor(np.transpose(self.data, axes))
+    
     # Indexing Operations ================================================
     def __getitem__(self, index):
         return Tensor(self.data[index])
@@ -288,6 +256,9 @@ class Tensor:
         a_shape, b_shape = np.broadcast_arrays(self.data, other.data).shape
         return Tensor(self.data * np.ones(a_shape)), Tensor(other.data * np.ones(b_shape))
 
+    def zero_grad(self):
+        self.grad = np.zeros_like(self.data)
+
     def clone(self):
         return Tensor(self.data.copy(), self.requires_grad)
     
@@ -299,7 +270,7 @@ class Tensor:
         # Here is where device transfer would go. NumPy arrays are always on the CPU, so this is a placeholder
         self.device = device
         return self
-
+    
     # Other Methods =======================================================
     @property
     def T(self, axes=None):

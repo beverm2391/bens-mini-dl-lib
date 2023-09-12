@@ -1,7 +1,7 @@
 import numpy as np
 
 from lib.Layers import Dense
-from lib.Tensor import Tensor
+from lib.Tensor_old import Tensor
 
 def test_dense_forward():
     np.random.seed(0) # set seed for reproducibility

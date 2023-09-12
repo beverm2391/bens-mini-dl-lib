@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from lib.Tensor import Tensor
+from lib.Tensor_old import Tensor
 
 @pytest.fixture
 def vars():

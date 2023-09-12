@@ -1,4 +1,4 @@
-from lib.Tensor import Tensor
+from lib.Tensor_old import Tensor
 import numpy as np
 
 class Layer:
