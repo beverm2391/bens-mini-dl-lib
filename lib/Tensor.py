@@ -37,6 +37,7 @@ class Tensor:
             "pow": self.backward_pow,
             "matmul": self.backward_matmul,
             "transpose": self.backward_transpose,
+            "sum": self.backward_sum,
         }
         return ops
 
@@ -202,6 +203,15 @@ class Tensor:
         return Tensor(np.abs(self.data), requires_grad=self.requires_grad, parents=[self], creation_op='abs')
 
     # Reduction Operations =======================================
+    def sum(self, axis=None):
+        result = np.sum(self.data, axis=axis)
+        return Tensor(result, requires_grad=self.requires_grad, parents=[self], creation_op='sum')
+    
+    def backward_sum(self):
+        """
+        (sum(a))' = 1 for each element in a
+        """
+        self.parents[0].backward(self.grad * np.ones_like(self.data))
 
     # Shape Operations ===========================================
     def transpose(self):
