@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from typing import Any
 import numpy as np
 
-from lib.Tensor_old import Tensor
+from lib.depricated.SimpleTensor import Tensor
 
 class Activation(ABC):
 

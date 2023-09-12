@@ -28,4 +28,4 @@ def test_dense_backward():
     expected_weights_grad = np.array([[2, 4, 6], [0, 0, 0]])
     expected_biases_grad = np.array([2, 4])
 
-    assert np.allclose(layer.weights.grad.data, expected_weights_grad), f"Expected {expected_weights_grad}, got {layer.weights.grad.data}"
+    assert np.allclose(layer.weights.grad, expected_weights_grad), f"Expected {expected_weights_grad}, got {layer.weights.grad.data}"

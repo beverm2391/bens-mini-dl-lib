@@ -1,313 +1,227 @@
 import numpy as np
 import warnings
+from functools import wraps
+from typing import Union
 
 class Tensor:
     """
-    New Tensor class with auto differentiation
+    Tensor with Auto Differentiation, v2
     """
-    def __init__(self, data, requires_grad=True, parents=None, creation_op=None):
-        self.data = np.array(data) # data
-        self.shape = self.data.shape # shape of data
-        self.requires_grad = requires_grad # whether to calculate gradients
-        self.parents = parents or []
-        self.creation_op = creation_op
-        self.grad = self.zero_grad() if requires_grad else None # gradient of data, if needed
-        self.is_scalar = self.data.ndim == 0 # whether the data is a scalar
+    def __init__(self, data: Union[int, float, np.ndarray], dtype: str = 'float', requires_grad: bool = False, parents=None, creation_op=None):
+        self.data = np.array(data, dtype=dtype) # The data contained in the tensor
+        self.dtype = dtype # The data type of the tensor
+
+        self.shape = self.data.shape # The shape of the tensor
+        self.ndim = self.data.ndim # The number of dimensions of the tensor
+        self.size = self.data.size # The number of elements in the tensor
+
+        self.requires_grad = requires_grad # Whether or not to compute gradients for this tensor
+        self.grad = None # The gradient of this tensor (this should be an array, like the data attribute)
+
+        if self.requires_grad: # If we need to compute gradients for this tensor
+            self.zero_grad() # Initialize the gradient to 0
+
+        self.parents = parents or [] # Tensors from which this one was created
+        self.creation_op = creation_op # The operation that created this tensor
+
+    @property
+    def backward_ops(self):
+        """
+        I did this to clearly see what's implemented and what's not
+        """
+        ops = {
+            "add": self.backward_add,
+            "sub": self.backward_sub,
+            "mul": self.backward_mul,
+            "div": self.backward_div,
+            "pow": self.backward_pow,
+            "matmul": self.backward_matmul,
+            "transpose": self.backward_transpose,
+        }
+        return ops
 
     def zero_grad(self):
+        """
+        Zero out the gradient
+        """
         self.grad = np.zeros_like(self.data)
-    
-    def backward(self, grad=None):
-        if not self.requires_grad: # if this tensor doesn't require gradients, return
-            return
-        if self.creation_op == None: # if this is a leaf node, return
-            return
 
-        if grad is None and self.grad is None:
-            # if self is a leaf node, we can start from 1
-            grad = Tensor(np.ones_like(self.data))
+    def backward(self, grad : np.ndarray = None):
+        # the grad should be an array (not a Tensor) just like the data attribute
+        """
+        This function will be called recursively to backpropogate gradients (auto differentiation)
+        """
+        if not self.requires_grad: # if gradient is not required, return
+            return
+        
+        # if we dont have a gradient passed in, initialize it to 1
+        if grad is None:  # if we call backward without passing a gradient, initialize the gradient to 1
+            grad = np.ones_like(self.data)
+
+        # if we do have a gradient passed in, either initalize self.grad or accumulate it
         if self.grad is None:
             self.grad = grad
         else:
-            self.grad += grad # if self is a leaf node, we accumulate gradients
+            self.grad += grad  # accumulate gradient
 
+        # if the tensor was created by the user, return
+        if self.creation_op is None:
+            return
+    
         # time to backpropogate
-        if self.creation_op == 'add':
-            self.parents[0].backward(self.grad)
-            self.parents[1].backward(self.grad)
-        elif self.creation_op == 'sub':
-            self.parents[0].backward(self.grad)
-            self.parents[1].backward(-self.grad)
-        elif self.creation_op == 'mul':
-            self.parents[0].backward(self.grad * self.parents[1])
-            self.parents[1].backward(self.grad * self.parents[0])
-        elif self.creation_op == 'div':
-            self.parents[0].backward(self.grad / self.parents[1])
-            self.parents[1].backward(-self.grad * self.parents[0] / self.parents[1] ** 2)
-        elif self.creation_op == 'pow':
-            self.parents[0].backward(self.grad * self.parents[1].data * (self.parents[0].data ** (self.parents[1].data - 1)))
-            self.parents[1].backward(self.grad * (self.parents[0].data ** self.parents[1].data) * np.log(self.parents[0].data))
-        # TODO handle scalar multiplication problems
-        elif self.creation_op == 'matmul':
-            raise NotImplementedError("Matrix multiplication backprop not implemented")    
-        # update to handle edge cases
-        elif self.creation_op == 'neg':
-            self.parents[0].backward(-self.grad)
-        elif self.creation_op == 'transpose':
-            self.parents[0].backward(self.grad.T)
-        elif self.creation_op == 'abs':
-            self.parents[0].backward(self.grad * np.sign(self.parents[0].data))
-        elif self.creation_op == 'sum':
-            self.parents[0].backward(self.grad * np.ones_like(self.parents[0].data))
-        elif self.creation_op == 'mean':
-            self.parents[0].backward(self.grad * np.ones_like(self.parents[0].data) / np.size(self.parents[0].data))
-        elif self.creation_op == 'max':
-            self.parents[0].backward(self.grad * (self.parents[0].data == self.data))
-        elif self.creation_op == 'min':
-            self.parents[0].backward(self.grad * (self.parents[0].data == self.data))
-        elif self.creation_op == 'std':
-            mean_val = np.mean(self.parents[0].data)
-            N = self.parents[0].data.size
-            self.parents[0].backward(self.grad * (self.parents[0].data - mean_val) / (self.data * np.sqrt(N)))
-        elif self.creation_op == 'reshape':
-            self.parents[0].backward(self.grad.reshape(self.parents[0].shape)) # reshape to the shape of the parent
-        elif self.creation_op == 'squeeze':
-            axis = self.meta_info['axis']
-            if axis is not None:
-                grad_expanded = np.expand_dims(grad, axis=axis)
-            else:
-                grad_expanded = grad
-            self.parents[0].backward(grad_expanded)
-        elif self.creation_op == 'unsqueeze':
-            axis = self.meta_info['axis']
-            self.parents[0].backward(np.squeeze(grad, axis=axis))
+        backward_op = self.backward_ops.get(self.creation_op, None) # get the correct backward op
+        if backward_op:
+            backward_op() # call the backward op
         else:
-            raise NotImplementedError(f"Gradient for {self.creation_op} not implemented")
-        # TODO: add broadcasting, indexing
-
-    # Basic Operations ============================================
-    def __add__(self, other):
-        if not isinstance(other, Tensor):
-            other = Tensor(other)
-        return Tensor(self.data + other.data, requires_grad=True, parents=[self, other], creation_op='add')
+            raise NotImplementedError(f"Backward op for {self.creation_op} not implemented")
         
-    def __sub__(self, other):
-        if not isinstance(other, Tensor):
-            other = Tensor(other)
-        return Tensor(self.data - other.data, requires_grad=True, parents=[self, other], creation_op='sub')
-        
-    def __mul__(self, other):
-        if not isinstance(other, Tensor):
-            other = Tensor(other)
-        return Tensor(self.data * other.data, requires_grad=True, parents=[self, other], creation_op='mul')
-        
-    def __truediv__(self, other):
-        if not isinstance(other, Tensor):
-            other = Tensor(other)
-        return Tensor(self.data / other.data, requires_grad=True, parents=[self, other], creation_op='div')
-        
-    def __pow__(self, other):
-        if not isinstance(other, Tensor):
-            other = Tensor(other)
-        return Tensor(self.data ** other.data, requires_grad=True, parents=[self, other], creation_op='pow')
-        
-    def __matmul__(self, other):
-        if not isinstance(other, Tensor):
-            other = Tensor(other)
-        if self.is_scalar:
-            return Tensor(self.data * other.data)
-        
-        if self.data.ndim == 0 and other.data.ndim == 0: # if both are scalars
-            warnings.warn("Both of your inputs are scalars. Using element-wise multiplication instead. Use the * operator insead of @.")
-            return self.data * other.data
-        
-        if self.data.ndim == 0 and other.data.ndim > 0: # if self is a scalar and other is not
-            warnings.warn("One of your inputs is a scalar. Using element-wise multiplication instead. Use the * operator insead of @.")
-            return Tensor(self.data * other.data, requires_grad=True, parents=[self, other], creation_op='mul')
-        
-        if self.data.ndim > 0 and other.data.ndim == 0: # if self is not a scalar and other is
-            warnings.warn("One of your inputs is a scalar. Using element-wise multiplication instead. Use the * operator insead of @.")
-            return Tensor(self.data * other.data, requires_grad=True, parents=[self, other], creation_op='mul')
-        
-        # v * v
-        if self.data.ndim == 1 and other.data.ndim == 1: # if both are vectors
-            if self.data.shape[0] != other.data.shape[0]: # if the vectors are not the same length
-                raise ValueError(f"Cannot perform matrix multiplication on tensors with shapes {self.data.shape} and {other.data.shape}.")
-
-        # v * m
-        if self.data.ndim == 1 and other.data.ndim > 1:
-            if self.data.shape[0] != other.data.shape[-2]:
-                raise ValueError(f"Cannot perform matrix multiplication on tensors with shapes {self.data.shape} and {other.data.shape}.")
+    def make_tensor(func):
+        """
+        Decorator to convert the 'other' arg to a tensor if its not already a tensor
+        """
+        @wraps(func) # make sure the wrapper function has the same name, docstring, etc. as the original function
+        def wrapper(self, other):
+            if not isinstance(other, Tensor):
+                other = Tensor(other)
+            return func(self, other)
+        return wrapper
             
-        # m * v
-        if self.data.ndim > 1 and other.data.ndim == 1:
-            if self.data.shape[-1] != other.data.shape[0]:
-                raise ValueError(f"Cannot perform matrix multiplication on tensors with shapes {self.data.shape} and {other.data.shape}.")
+    # Basic Operations ===========================================
+    @make_tensor
+    def __add__(self,  other: Union[int, float, 'Tensor']) -> 'Tensor':
+        """
+        a + b
+        """
+        result = np.add(self.data, other.data)
+        return Tensor(result, requires_grad=(self.requires_grad or other.requires_grad), parents=[self, other], creation_op="add")
+    
+    def backward_add(self):
+        """
+        (a + b)' = a' + b'
+        """
+        self.parents[0].backward(self.grad) 
+        self.parents[1].backward(self.grad)
 
-        #  m * m
-        if self.data.ndim > 1 and other.data.ndim > 1:
-            if self.data.shape[-1] != other.data.shape[-2]:
-                raise ValueError(f"Cannot perform matrix multiplication on tensors with shapes {self.data.shape} and {other.data.shape}.")
+    @make_tensor
+    def __sub__(self, other: Union[int, float, 'Tensor']) -> 'Tensor':
+        """
+        a - b
+        """
+        result = np.subtract(self.data, other.data)
+        return Tensor(result, requires_grad=(self.requires_grad or other.requires_grad), parents=[self, other], creation_op="sub")
+    
+    def backward_sub(self):
+        """
+        (a - b)' = a' - b'
+        The first parent receives the gradient directly, the second parent receives the negation of the gradient.
+        """
+        self.parents[0].backward(self.grad)
+        self.parents[1].backward(-self.grad)
+    
+    @make_tensor
+    def __mul__(self, other: Union[int, float, 'Tensor']) -> 'Tensor':
+        result = np.multiply(self.data, other.data)
+        return Tensor(result, requires_grad=(self.requires_grad or other.requires_grad), parents=[self, other], creation_op="mul")
+    
+    def backward_mul(self):
+        """
+        (a * b)' = a' * b + a * b'
+        The gradient is scaled by the other parent for each respective parent.
+        """
+        self.parents[0].backward(self.grad * self.parents[1].data) # a' * b
+        self.parents[1].backward(self.grad * self.parents[0].data) # a * b'
+    
+    @make_tensor
+    def __truediv__(self, other: Union[int, float, 'Tensor']) -> 'Tensor':
+        result = np.divide(self.data, other.data)
+        return Tensor(result, requires_grad=(self.requires_grad or other.requires_grad), parents=[self, other], creation_op="div")
+    
+    def backward_div(self):
+        """
+        (a / b)' = (a' * b - a * b') / b^2
+        The first parent receives the scaled gradient, and the second parent receives the scaled and negated gradient.
+        """
+        self.parents[0].backward(self.grad / self.parents[1].data)  # a' / b
+        self.parents[1].backward(-self.grad * self.parents[0].data / (self.parents[1].data ** 2))  # -a / b^2
+        
+    @make_tensor
+    def __pow__(self, other: Union[int, float, 'Tensor']) -> 'Tensor':
+        result = np.power(self.data, other.data)
+        return Tensor(result, requires_grad=(self.requires_grad or other.requires_grad), parents=[self, other], creation_op="pow")
+    
+    def backward_pow(self):
+        """
+        f(a, b) = a^b
+        df/da = b * a^(b - 1)
+        df/db = a^b * ln(a)
+        """
+        a = self.parents[0].data
+        b = self.parents[1].data
 
+        # find partial derivatives
+        grad_wrt_a = self.grad * b * (a ** (b - 1))
+        grad_wrt_b = self.grad * (a ** b) * np.log(a)
+
+        # backpropogate
+        self.parents[0].backward(grad_wrt_a)
+        self.parents[1].backward(grad_wrt_b)
+
+    @make_tensor
+    def __matmul__(self, other):
+        """
+        Matrix multiplication
+        """
         result = np.matmul(self.data, other.data)
-        return Tensor(result, requires_grad=True, parents=[self, other], creation_op='matmul')
-    
-    # Reverse Operations ============================================
-    def __radd__(self, other):
-        return self.__add__(other)
+        return Tensor(result, requires_grad=(self.requires_grad or other.requires_grad), parents=[self, other], creation_op="matmul")
 
-    def __rsub__(self, other):
-        return Tensor(other - self.data)  # Note the order
+    def backward_matmul(self):
+        """
+        (A @ B)' = A' @ B + A @ B'
+        """
+        # find partial derivatives
+        grad_wrt_first_parent = Tensor(np.matmul(self.grad, self.parents[1].data.T))
+        grad_wrt_second_parent = Tensor(np.matmul(self.parents[0].data.T, self.grad))
 
-    def __rmul__(self, other):
-        return self.__mul__(other)
+        # backpropogate
+        self.parents[0].backward(grad_wrt_first_parent.data)
+        self.parents[1].backward(grad_wrt_second_parent.data)
 
-    def __rtruediv__(self, other):
-        return Tensor(other / self.data)  # Note the order
-    
-    def __rpow__(self, other):
-        return Tensor(other ** self.data)
-    
-    def __rmatmul__(self, other):
-        if not isinstance(other, Tensor):
-            other = Tensor(other)
-        # The other array should be on the left-hand side now
-        # assuming self.data and other.data are NumPy arrays
-        result = np.matmul(other.data, self.data)
-        return Tensor(result)
-    
-    # Unary Operations ============================================
+
+    # Reverse Operations =========================================
+
+    # Unary Operations ===========================================
+
+    # no decorator because no args to convert to tensors
     def __neg__(self):
         return self * -1
     
+    # no decorator because no args to convert to tensors
     def __abs__(self):
         return Tensor(np.abs(self.data), requires_grad=self.requires_grad, parents=[self], creation_op='abs')
-    
-    # Reduction Operations ========================================
-    def sum(self, axis=None):
-        if self.is_scalar:
-            return self # can't sum a scalar
-        return Tensor(self.data.sum(axis=axis), requires_grad=self.requires_grad, parents=[self], creation_op='sum')
 
-    def mean(self, axis=None):
-        if self.is_scalar:
-            return self # can't mean a scalar
-        return Tensor(self.data.mean(axis=axis), requires_grad=self.requires_grad, parents=[self], creation_op='mean')
-        
-    def max(self, axis=None):
-        if self.is_scalar:
-            return self # can't max a scalar
-        return Tensor(self.data.max(axis=axis), requires_grad=self.requires_grad, parents=[self], creation_op='max')
-        
-    def min(self, axis=None):
-        if self.is_scalar:
-            return self # can't min a scalar
-        return Tensor(self.data.min(axis=axis), requires_grad=self.requires_grad, parents=[self], creation_op='min')
-    
-    def std(self, axis=None):
-        if self.is_scalar:
-            return self # can't std a scalar
-        return Tensor(self.data.std(axis=axis), requires_grad=self.requires_grad, parents=[self], creation_op='std')
-    
-    # Shape Operations ==================================================
-    def reshape(self, *new_shape):
-        return Tensor(self.data.reshape(new_shape), requires_grad=self.requires_grad, parents=[self], creation_op='reshape', \
-                    meta_info = {"original_shape" : self.shape})
-    
-    def squeeze(self, axis=None):
-        return Tensor(self.data.squeeze(axis=axis), requires_grad=self.requires_grad, parents=[self], creation_op='squeeze', \
-                        meta_info = {"axis" : axis} if axis is not None else None)
-    
-    def unsqueeze(self, axis):
-        return Tensor(np.expand_dims(self.data, axis=axis), requires_grad=self.requires_grad, parents=[self], creation_op='unsqueeze', \
-                        meta_info = {"axis" : axis})
+    # Reduction Operations =======================================
 
-    def transpose(self, axes=None):
-        return Tensor(np.transpose(self.data, axes), requires_grad=self.requires_grad, parents=[self], creation_op='transpose')
-    
-    # Comparison Operations =======================================
-    def __gt__(self, other):
-        if isinstance(other, (int, float)):
-            return Tensor(self.data > other)
-        elif isinstance(other, Tensor):
-            if self.data.shape != other.data.shape:
-                raise ValueError("Shape mismatch")
-            return Tensor(self.data > other.data)
-        else:
-            raise TypeError("Unsupported type for comparison")
+    # Shape Operations ===========================================
+    def transpose(self):
+        return Tensor(self.data.transpose(), requires_grad=self.requires_grad, parents=[self], creation_op='transpose')
 
-    def __lt__(self, other):
-        if isinstance(other, (int, float)):
-            return Tensor(self.data < other)
-        elif isinstance(other, Tensor):
-            if self.data.shape != other.data.shape:
-                raise ValueError("Shape mismatch")
-            return Tensor(self.data < other.data)
-        else:
-            raise TypeError("Unsupported type for comparison")
-
-    def __ge__(self, other):
-        if isinstance(other, (int, float)):
-            return Tensor(self.data >= other)
-        elif isinstance(other, Tensor):
-            if self.data.shape != other.data.shape:
-                raise ValueError("Shape mismatch")
-            return Tensor(self.data >= other.data)
-        else:
-            raise TypeError("Unsupported type for comparison")
-
-    def __le__(self, other):
-        if isinstance(other, (int, float)):
-            return Tensor(self.data <= other)
-        elif isinstance(other, Tensor):
-            if self.data.shape != other.data.shape:
-                raise ValueError("Shape mismatch")
-            return Tensor(self.data <= other.data)
-        else:
-            raise TypeError("Unsupported type for comparison")
-
-    # Indexing Operations ================================================
-    def __getitem__(self, index):
-        return Tensor(self.data[index])
-    
-    def __setitem__(self, index, value):
-        self.data[index] = value if isinstance(value, Tensor) else Tensor(value)
-
-    # Utility Methods ====================================================
-    def _broadcast_tensors(self, other):
-        if not isinstance(other, Tensor):
-            other = Tensor(other)
-        a_shape, b_shape = np.broadcast_arrays(self.data, other.data).shape
-        return Tensor(self.data * np.ones(a_shape)), Tensor(other.data * np.ones(b_shape))
-
-    def clone(self):
-        return Tensor(self.data.copy(), self.requires_grad)
-    
-    def detach(self):
-        return Tensor(self.data, requires_grad=False)
-    
-    def to(self, device):
-        # TODO: Implement device transfer
-        # Here is where device transfer would go. NumPy arrays are always on the CPU, so this is a placeholder
-        self.device = device
-        return self
-
-    # Other Methods =======================================================
-    @property
-    def T(self, axes=None):
-        return self.transpose(axes=axes)
+    def backward_transpose(self):
+        """
+        (A^T)' = (A')
+        """
+        self.parents[0].backward(self.grad.transpose()) # A'
     
     @property
-    def size(self):
-        s = 1
-        for dim in self.shape:
-            s *= dim
-        return s
+    def T(self):
+        return self.transpose()
 
-    def __eq__(self, other):
-        if not isinstance(other, Tensor):
-            return False
-        return np.array_equal(self.data, other.data)
-    
+    # Comparison Operations ======================================
+
+    # Indexing, Slicing, Joining, Mutating Ops ==================
+
+    # Utils =====================================================
+
+    # Other =====================================================
+
     def __repr__(self):
         return f"Tensor({self.data}, requires_grad={self.requires_grad})"

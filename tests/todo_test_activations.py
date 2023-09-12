@@ -1,7 +1,7 @@
 import pytest
 import numpy as np
 
-from lib.Tensor import Tensor
+from lib.depricated.TensorAutoGradv1 import Tensor
 from lib.Activations import *
 
 def test_relu_forward():
