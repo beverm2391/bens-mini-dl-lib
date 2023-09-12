@@ -2,6 +2,9 @@ import numpy as np
 import warnings
 
 class Tensor:
+    """
+    New Tensor class with auto differentiation
+    """
     def __init__(self, data, requires_grad=True, parents=None, creation_op=None):
         self.data = np.array(data) # data
         self.shape = self.data.shape # shape of data
@@ -12,7 +15,7 @@ class Tensor:
         self.is_scalar = self.data.ndim == 0 # whether the data is a scalar
 
     def zero_grad(self):
-        return Tensor(np.zeros_like(self.data))
+        self.grad = np.zeros_like(self.data)
     
     def backward(self, grad=None):
         if not self.requires_grad: # if this tensor doesn't require gradients, return

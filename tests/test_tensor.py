@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from lib.Tensor_old import Tensor
+from lib.Tensor import Tensor
 
 @pytest.fixture
 def vars():
@@ -61,6 +61,7 @@ def test_addition(vars):
     # matrix + matrix (different shapes)
     with pytest.raises(ValueError):
         m + m3
+
 
 def test_subtraction(vars):
     s, v, v2, v3, m, m2, m3 = vars
@@ -133,3 +134,6 @@ def test_matmul(vars):
 
 # ! Other Methods ========================================
 # TODO: test other methods
+
+# ! Auto Differentiation ========================================
+# TODO: test auto differentiation

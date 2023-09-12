@@ -1,151 +1,137 @@
-import pytest
 import numpy as np
+import pytest
+
 from lib.Tensor_old import Tensor
 
-def test_addition():
-    a = Tensor(np.array([1, 2]))
-    b = Tensor(np.array([3, 4]))
-    result = a + b
-    expected = np.array([4, 6])
-    assert np.all(result.data == expected)
+# ! These tests are for the depricated Tensor class without auto differentiation
 
-def test_subtraction():
-    a = Tensor(np.array([5, 6]))
-    b = Tensor(np.array([1, 2]))
-    result = a - b
-    expected = np.array([4, 4])
-    assert np.all(result.data == expected)
-
-def test_multiplication():
-    a = Tensor(np.array([1, 2]))
-    b = Tensor(np.array([3, 4]))
-    result = a * b
-    expected = np.array([3, 8])
-    assert np.all(result.data == expected)
-
-def test_matmul_matrix_matrix():
-    a = Tensor(np.array([[1, 2], [3, 4]]))
-    b = Tensor(np.array([[5, 6], [7, 8]]))
-    result = a @ b
-    expected = np.array([[19, 22], [43, 50]])  # Matrix multiplication
-    assert np.all(result.data == expected)
-
-def test_matmul_matrix_vector():
-    a = Tensor(np.array([[1, 2], [3, 4]]))
-    b = Tensor(np.array([5, 6]))
-    result = a @ b
-    expected = np.array([17, 39])  # [1*5 + 2*6, 3*5 + 4*6]
-    assert np.all(result.data == expected)
-
-def test_matmul_vector_vector():
-    a = Tensor(np.array([1, 2]))
-    b = Tensor(np.array([3, 4]))
-    result = a @ b
-    expected = 11  # 1*3 + 2*4
-    assert result == expected
-
-def test_matmul_dimension_mismatch():
-    a = Tensor(np.array([[1, 2], [3, 4], [5, 6]]))
-    b = Tensor(np.array([[5, 6], [7, 8], [9, 10]]))
-    with pytest.raises(ValueError):
-        a @ b
-
-def test_transpose():
-    a = Tensor(np.array([[1, 2], [3, 4]]))
-    result = a.T
-    expected = np.array([[1, 3], [2, 4]])
-    assert np.all(result == expected)
-
-def test_addition_with_scalar():
-    a = Tensor(np.array([1, 2]))
-    result = a + 2
-    expected = np.array([3, 4])
-    assert np.all(result.data == expected)
-
-def test_subtraction_with_scalar():
-    a = Tensor(np.array([5, 6]))
-    result = a - 1
-    expected = np.array([4, 5])
-    assert np.all(result.data == expected)
-
-def test_multiplication_with_scalar():
-    a = Tensor(np.array([1, 2]))
-    result = a * 3
-    expected = np.array([3, 6])
-    assert np.all(result.data == expected)
-
-#! Basic Tensor Operations ============================================
-def test_scalar_and_scalar():
-    t = Tensor(5)
-    s = 2
-    assert t + s == Tensor(7)
-    assert t - s == Tensor(3)
-    assert t * s == Tensor(10)
-    assert t / s == Tensor(2.5)
-
-def test_vector_and_scalar():
-    t = Tensor([1, 2, 3, 4, 5])
-    s = 2
-    assert t + s == Tensor([3, 4, 5, 6, 7])
-    assert t - s == Tensor([-1, 0, 1, 2, 3])
-    assert t * s == Tensor([2, 4, 6, 8, 10])
-    assert t / s == Tensor([0.5, 1, 1.5, 2, 2.5])
-    # assert t @ s == Tensor([2, 4, 6, 8, 10]) # TODO fix matmul
-    
-def test_vector_and_vector():
+@pytest.fixture
+def vars():
+    # define some variables to use in tests
+    s = Tensor(5)
     v = Tensor([1, 2, 3, 4, 5])
     v2 = Tensor([2, 3, 4, 5, 6])
+    v3 = Tensor([1, 2, 3, 4])
+    m = Tensor([
+        [1, 2, 3],
+        [4, 5, 6],
+        [7, 8, 9]
+    ])
+    m2 = Tensor([
+        [1, 2, 3],
+        [4, 5, 6],
+        [7, 8, 9]
+    ])
+    m3 = Tensor([
+        [1, 2, 3, 4],
+        [5, 6, 7, 8]
+    ])
+    return s, v, v2, v3, m, m2, m3
 
+# ! Basic Tensor Operations ============================================
+def test_addition(vars):
+    s, v, v2, v3, m, m2, m3 = vars
+    # scalar + scalar
+    assert s + s == Tensor(10)
+    # scalar + vector
+    assert s + v == Tensor([6, 7, 8, 9, 10])
+    # vector + scalar
+    assert v + s == Tensor([6, 7, 8, 9, 10])
+    # vector + vector
     assert v + v2 == Tensor([3, 5, 7, 9, 11])
-    assert v - v2 == Tensor([-1, -1, -1, -1, -1])
-    assert v * v2 == Tensor([2, 6, 12, 20, 30])
-    assert v / v2 == Tensor([0.5, 2/3, 3/4, 4/5, 5/6])
-    assert v @ v2 == Tensor(70)
-
-def test_vector_and_tensor():
-    v = Tensor([1, 2, 3])
-    v2 = Tensor([1, 2, 3, 4])
-    t = Tensor([
-        [1, 2, 3],
-        [4, 5, 6],
-        [7, 8, 9]
-    ])
-
-    assert v @ t == Tensor([30, 36, 42])
-
+    # vector + vector (different lengths)
     with pytest.raises(ValueError):
-        v2 @ t
-
-def test_tensor_and_tensor():
-    t = Tensor([
-        [1, 2, 3],
-        [4, 5, 6],
-        [7, 8, 9]
+        v + v3
+    # vector + matrix
+    with pytest.raises(ValueError):
+        v + m
+    # matrix + scalar
+    assert m + s == Tensor([
+        [6, 7, 8],
+        [9, 10, 11],
+        [12, 13, 14]
     ])
-
-    t2 = Tensor([
-        [1, 2, 3],
-        [4, 5, 6],
-        [7, 8, 9]
+    # matrix + vector
+    with pytest.raises(ValueError):
+        m + v
+    # matrix + matrix
+    assert m + m2 == Tensor([
+        [2, 4, 6],
+        [8, 10, 12],
+        [14, 16, 18]
     ])
+    # matrix + matrix (different shapes)
+    with pytest.raises(ValueError):
+        m + m3
 
-    t3 = Tensor([
-        [1, 2, 3],
-        [4, 5, 6]
+def test_subtraction(vars):
+    s, v, v2, v3, m, m2, m3 = vars
+    # Vector - Vector
+    assert (v - v2) == Tensor([-1, -1, -1, -1, -1])
+    # Matrix - Matrix
+    assert (m - m2) == Tensor(np.zeros((3, 3), dtype=np.int8))
+
+def test_multiplication(vars):
+    s, v, v2, v3, m, m2, m3 = vars
+    # Scalar * Vector
+    assert (s * v) == Tensor([5, 10, 15, 20, 25])
+    # Vector * Matrix
+    with pytest.raises(ValueError):
+        v * m
+    # Matrix * Matrix
+    assert (m * m2) == Tensor(np.array([
+        [1, 4, 9],
+        [16, 25, 36],
+        [49, 64, 81]
+    ]))
+
+def test_division(vars):
+    s, v, v2, v3, m, m2, m3 = vars
+    # Scalar / Vector
+    assert (s / v) == Tensor([5, 2.5, 5/3, 1.25, 1])
+    # Vector / Scalar
+    assert (v / s) == Tensor([1/5, 2/5, 3/5, 4/5, 1])
+
+def test_matmul(vars):
+    s, v, v2, v3, m, m2, m3 = vars
+    # Scalar @ Scalar
+    assert (s @ s) == Tensor(25)
+    # Scalar @ Vector
+    assert (s @ v) == Tensor([5, 10, 15, 20, 25])
+    # Vector @ Vector
+    assert (v @ v2) == Tensor(70)
+    # Vector @ Vector (different lengths)
+    with pytest.raises(ValueError):
+        v @ v3
+    # Vector @ Matrix
+    assert (v3 @ m3.T) == Tensor([30, 70])
+    # Matrix @ Scalar
+    assert m @ s == Tensor([
+        [5, 10, 15],
+        [20, 25, 30],
+        [35, 40, 45]
     ])
-
-    assert t @ t2 == Tensor([
+    # Matrix @ Matrix
+    assert (m @ m2) == Tensor([
         [30, 36, 42],
         [66, 81, 96],
         [102, 126, 150]
     ])
-
+    # Matrix @ Matrix (different shapes)
     with pytest.raises(ValueError):
-        t @ t3
+        m @ m3
 
-def test_all_basic_methods():
-    test_scalar_and_scalar()
-    test_vector_and_scalar()
-    test_vector_and_vector()
-    test_vector_and_tensor()
-    test_tensor_and_tensor()
+#! Reduction Operations ========================================
+# TODO: test reduction operations
+
+# ! Shape Operations ========================================
+# TODO: test shape operations
+
+# ! Indexing Operations ========================================
+# TODO: test indexing operations
+
+# ! Utility Methods ========================================
+# TODO: test utility methods
+
+# ! Other Methods ========================================
+# TODO: test other methods
