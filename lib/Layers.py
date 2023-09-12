@@ -1,4 +1,4 @@
-from lib.depricated.TensorAutoGradv1 import Tensor
+from lib.Tensor import Tensor
 import numpy as np
 
 class Layer:
