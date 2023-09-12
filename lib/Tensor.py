@@ -162,8 +162,12 @@ class Tensor:
         b = self.parents[1].data
 
         # find partial derivatives
-        grad_wrt_a = self.grad * b * (a ** (b - 1))
-        grad_wrt_b = self.grad * (a ** b) * np.log(a)
+        grad_wrt_a = self.grad * b * (a ** (b - 1)) # Partial derivative with respect to 'a'
+
+        # Partial derivative with respect to 'b', replacing NaNs and Infs with zero
+        with np.errstate(divide='ignore', invalid='ignore'): # do this to ignore divide by zero errors
+            grad_wrt_b = self.grad * (a ** b) * np.log(a)
+        grad_wrt_b = np.where(np.isfinite(grad_wrt_b), grad_wrt_b, 0) # replace inf and nan with 0
 
         # backpropogate
         self.parents[0].backward(grad_wrt_a)
