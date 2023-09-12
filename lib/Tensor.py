@@ -46,12 +46,14 @@ class Tensor:
         """
         self.grad = np.zeros_like(self.data)
 
-    def backward(self, grad : np.ndarray = None):
+    def backward(self, grad: np.ndarray = None):
         # the grad should be an array (not a Tensor) just like the data attribute
         """
         This function will be called recursively to backpropogate gradients (auto differentiation)
         """
         if not self.requires_grad: # if gradient is not required, return
+            # warnings.warn("You called backward on a tensor that does not require gradients")
+            raise Exception("You called backward on a tensor that does not require gradients")
             return
         
         # if we dont have a gradient passed in, initialize it to 1
@@ -222,6 +224,16 @@ class Tensor:
     # Utils =====================================================
 
     # Other =====================================================
+
+    def __eq__(self, other):
+        if not isinstance(other, Tensor):
+            raise NotImplementedError("Cannot compare Tensor to non-Tensor")
+        return np.array_equal(self.data, other.data)
+    
+    def isclose(self, other, rtol=1e-05, atol=1e-08, equal_nan=False):
+        if not isinstance(other, Tensor):
+            raise NotImplementedError("Cannot compare Tensor to non-Tensor")
+        return np.allclose(self.data, other.data, rtol=rtol, atol=atol, equal_nan=equal_nan)
 
     def __repr__(self):
         return f"Tensor({self.data}, requires_grad={self.requires_grad})"
