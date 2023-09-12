@@ -20,6 +20,9 @@ class Tensor:
     def backward(self, grad=None):
         if not self.requires_grad: # if this tensor doesn't require gradients, return
             return
+        if self.creation_op == None: # if this is a leaf node, return
+            return
+
         if grad is None and self.grad is None:
             # if self is a leaf node, we can start from 1
             grad = Tensor(np.ones_like(self.data))
@@ -44,9 +47,10 @@ class Tensor:
         elif self.creation_op == 'pow':
             self.parents[0].backward(self.grad * self.parents[1].data * (self.parents[0].data ** (self.parents[1].data - 1)))
             self.parents[1].backward(self.grad * (self.parents[0].data ** self.parents[1].data) * np.log(self.parents[0].data))
+        # TODO handle scalar multiplication problems
         elif self.creation_op == 'matmul':
-            self.parents[0].backward(grad @ self.parents[1].data.T)
-            self.parents[1].backward(self.parents[0].data.T @ grad)
+            raise NotImplementedError("Matrix multiplication backprop not implemented")    
+        # update to handle edge cases
         elif self.creation_op == 'neg':
             self.parents[0].backward(-self.grad)
         elif self.creation_op == 'transpose':
@@ -83,50 +87,35 @@ class Tensor:
 
     # Basic Operations ============================================
     def __add__(self, other):
-        if isinstance(other, (int, float)):
-            return Tensor(self.data + other, requires_grad=True, parents=[self, other], creation_op='add')
-        elif isinstance(other, Tensor):
-            return Tensor(self.data + other.data, requires_grad=True, parents=[self, other], creation_op='add')
-        else:
-            raise ValueError(f"Unsupported type for addition: {type(other)}")
-        
-    def __sub__(self, other):
-        if isinstance(other, (int, float)):
-            return Tensor(self.data - other, requires_grad=True, parents=[self, other], creation_op='sub')
-        elif isinstance(other, Tensor):
-            return Tensor(self.data - other.data, requires_grad=True, parents=[self, other], creation_op='sub')
-        else:
-            raise ValueError(f"Unsupported type for subtraction: {type(other)}")
-        
-    def __mul__(self, other):
-        if isinstance(other, (int, float)):
-            return Tensor(self.data * other, requires_grad=True, parents=[self, other], creation_op='mul')
-        elif isinstance(other, Tensor):
-            return Tensor(self.data * other.data, requires_grad=True, parents=[self, other], creation_op='mul')
-        else:
-            raise ValueError(f"Unsupported type for multiplication: {type(other)}")
-        
-    def __truediv__(self, other):
-        if isinstance(other, (int, float)):
-            return Tensor(self.data / other, requires_grad=True, parents=[self, other], creation_op='div')
-        elif isinstance(other, Tensor):
-            return Tensor(self.data / other.data, requires_grad=True, parents=[self, other], creation_op='div')
-        else:
-            raise ValueError(f"Unsupported type for division: {type(other)}")
-        
-    def __pow__(self, other):
-        if isinstance(other, (int, float)):
-            return Tensor(self.data ** other, requires_grad=True, parents=[self, other], creation_op='pow')
-        elif isinstance(other, Tensor):
-            return Tensor(self.data ** other.data, requires_grad=True, parents=[self, other], creation_op='pow')
-        else:
-            raise ValueError(f"Unsupported type for power: {type(other)}")
-        
-    def __matmul__(self, other):
-        if self.is_scalar:
-            return Tensor(self.data * other.data)
         if not isinstance(other, Tensor):
             other = Tensor(other)
+        return Tensor(self.data + other.data, requires_grad=True, parents=[self, other], creation_op='add')
+        
+    def __sub__(self, other):
+        if not isinstance(other, Tensor):
+            other = Tensor(other)
+        return Tensor(self.data - other.data, requires_grad=True, parents=[self, other], creation_op='sub')
+        
+    def __mul__(self, other):
+        if not isinstance(other, Tensor):
+            other = Tensor(other)
+        return Tensor(self.data * other.data, requires_grad=True, parents=[self, other], creation_op='mul')
+        
+    def __truediv__(self, other):
+        if not isinstance(other, Tensor):
+            other = Tensor(other)
+        return Tensor(self.data / other.data, requires_grad=True, parents=[self, other], creation_op='div')
+        
+    def __pow__(self, other):
+        if not isinstance(other, Tensor):
+            other = Tensor(other)
+        return Tensor(self.data ** other.data, requires_grad=True, parents=[self, other], creation_op='pow')
+        
+    def __matmul__(self, other):
+        if not isinstance(other, Tensor):
+            other = Tensor(other)
+        if self.is_scalar:
+            return Tensor(self.data * other.data)
         
         if self.data.ndim == 0 and other.data.ndim == 0: # if both are scalars
             warnings.warn("Both of your inputs are scalars. Using element-wise multiplication instead. Use the * operator insead of @.")
@@ -162,48 +151,6 @@ class Tensor:
 
         result = np.matmul(self.data, other.data)
         return Tensor(result, requires_grad=True, parents=[self, other], creation_op='matmul')
-    
-    # ! Updated opertaions to force Tensor class
-
-    def __add__(self, other):
-        if isinstance(other, (int, float)):
-            other = Tensor(other, requires_grad=False)
-        elif isinstance(other, Tensor):
-            return Tensor(self.data + other.data, requires_grad=True, parents=[self, other], creation_op='add')
-        else:
-            raise ValueError(f"Unsupported type for addition: {type(other)}")
-        
-    def __sub__(self, other):
-        if isinstance(other, (int, float)):
-            other = Tensor(other, requires_grad=False)
-        elif isinstance(other, Tensor):
-            return Tensor(self.data - other.data, requires_grad=True, parents=[self, other], creation_op='sub')
-        else:
-            raise ValueError(f"Unsupported type for subtraction: {type(other)}")
-        
-    def __mul__(self, other):
-        if isinstance(other, (int, float)):
-            other = Tensor(other, requires_grad=False)
-        elif isinstance(other, Tensor):
-            return Tensor(self.data * other.data, requires_grad=True, parents=[self, other], creation_op='mul')
-        else:
-            raise ValueError(f"Unsupported type for multiplication: {type(other)}")
-        
-    def __truediv__(self, other):
-        if isinstance(other, (int, float)):
-            other = Tensor(other, requires_grad=False)
-        elif isinstance(other, Tensor):
-            return Tensor(self.data / other.data, requires_grad=True, parents=[self, other], creation_op='div')
-        else:
-            raise ValueError(f"Unsupported type for division: {type(other)}")
-        
-    def __pow__(self, other):
-        if isinstance(other, (int, float)):
-            other = Tensor(other, requires_grad=False)
-        elif isinstance(other, Tensor):
-            return Tensor(self.data ** other.data, requires_grad=True, parents=[self, other], creation_op='pow')
-        else:
-            raise ValueError(f"Unsupported type for power: {type(other)}")
     
     # Reverse Operations ============================================
     def __radd__(self, other):

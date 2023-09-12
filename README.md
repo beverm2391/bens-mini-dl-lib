@@ -12,6 +12,9 @@ This adds a .pth file to the site-packages directory containing the project's ro
 - [X] Add basic loss functions
   
 ## TODO
+
+I'm currently working on refactoring my base Tensor to handle more dtypes for both forward and backward (autograd) operations. This has been significantly more complex than I thought... but that means I'm learning a lot.
+
 - [ ] Test backprop on dense layer
 - [ ] Find some way to write tests for the activation functions
 - [ ] Add a network class
