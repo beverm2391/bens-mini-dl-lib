@@ -85,7 +85,7 @@ class Tensor:
         @wraps(func) # make sure the wrapper function has the same name, docstring, etc. as the original function
         def wrapper(self, other):
             if not isinstance(other, Tensor):
-                other = Tensor(other)
+                other = Tensor(other, requires_grad=self.requires_grad)
             return func(self, other)
         return wrapper
             
@@ -186,12 +186,12 @@ class Tensor:
         (A @ B)' = A' @ B + A @ B'
         """
         # find partial derivatives
-        grad_wrt_first_parent = Tensor(np.matmul(self.grad, self.parents[1].data.T))
-        grad_wrt_second_parent = Tensor(np.matmul(self.parents[0].data.T, self.grad))
+        grad_wrt_first_parent = np.matmul(self.grad, self.parents[1].data.T)
+        grad_wrt_second_parent = np.matmul(self.parents[0].data.T, self.grad)
 
         # backpropogate
-        self.parents[0].backward(grad_wrt_first_parent.data)
-        self.parents[1].backward(grad_wrt_second_parent.data)
+        self.parents[0].backward(grad_wrt_first_parent)
+        self.parents[1].backward(grad_wrt_second_parent)
 
 
     # Reverse Operations =========================================
@@ -215,7 +215,7 @@ class Tensor:
         """
         (sum(a))' = 1 for each element in a
         """
-        self.parents[0].backward(self.grad * np.ones_like(self.data))
+        self.parents[0].backward(self.grad * np.ones_like(self.data)) # 1 for each element in a
 
     # Shape Operations ===========================================
     def transpose(self):
