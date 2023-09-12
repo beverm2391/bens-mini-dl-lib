@@ -6,17 +6,14 @@ I'm building this mini DL framework to get a better understanding of how things 
 ### setup.py
 This adds a .pth file to the site-packages directory containing the project's root dir. This allows for absolute imports anywhere without having to install the package or use sys.path.append(). Using this right now because I know it works, but I plan to try `pip install --editable .` in the future.
 
-## TODO
+## Completed
 - [X] Add a Dense layer
-- [ ] Finish Tensor tests
-  - [X] Basic ops
-  - [ ] Reduction ops
-  - [ ] Shape
-  - [ ] Indexing
-  - [ ] Utility
-  - [ ] Other
-- [ ] Find some way to write tests for the activation functions
+- [X] Add auto differentiation
 - [X] Add basic loss functions
+  
+## TODO
+- [ ] Test backprop on dense layer
+- [ ] Find some way to write tests for the activation functions
 - [ ] Add a network class
 - [ ] Add a training loop
 - [ ] Add data handling
@@ -25,3 +22,13 @@ This adds a .pth file to the site-packages directory containing the project's ro
 - [ ] Add regularization
 - [ ] Add examples and docs
 - [ ] Look into [this](https://vmartin.fr/automatic-jacobian-matrix-computation-with-sympy.html) jacobian matrix optimization
+
+## Backlog
+- [ ] Finish Tensor tests
+  - [X] Basic ops
+  - [ ] Reduction ops
+  - [ ] Shape
+  - [ ] Indexing
+  - [ ] Utility
+  - [ ] Other
+  - [ ] Auto diff

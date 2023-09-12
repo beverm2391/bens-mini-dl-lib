@@ -163,6 +163,48 @@ class Tensor:
         result = np.matmul(self.data, other.data)
         return Tensor(result, requires_grad=True, parents=[self, other], creation_op='matmul')
     
+    # ! Updated opertaions to force Tensor class
+
+    def __add__(self, other):
+        if isinstance(other, (int, float)):
+            other = Tensor(other, requires_grad=False)
+        elif isinstance(other, Tensor):
+            return Tensor(self.data + other.data, requires_grad=True, parents=[self, other], creation_op='add')
+        else:
+            raise ValueError(f"Unsupported type for addition: {type(other)}")
+        
+    def __sub__(self, other):
+        if isinstance(other, (int, float)):
+            other = Tensor(other, requires_grad=False)
+        elif isinstance(other, Tensor):
+            return Tensor(self.data - other.data, requires_grad=True, parents=[self, other], creation_op='sub')
+        else:
+            raise ValueError(f"Unsupported type for subtraction: {type(other)}")
+        
+    def __mul__(self, other):
+        if isinstance(other, (int, float)):
+            other = Tensor(other, requires_grad=False)
+        elif isinstance(other, Tensor):
+            return Tensor(self.data * other.data, requires_grad=True, parents=[self, other], creation_op='mul')
+        else:
+            raise ValueError(f"Unsupported type for multiplication: {type(other)}")
+        
+    def __truediv__(self, other):
+        if isinstance(other, (int, float)):
+            other = Tensor(other, requires_grad=False)
+        elif isinstance(other, Tensor):
+            return Tensor(self.data / other.data, requires_grad=True, parents=[self, other], creation_op='div')
+        else:
+            raise ValueError(f"Unsupported type for division: {type(other)}")
+        
+    def __pow__(self, other):
+        if isinstance(other, (int, float)):
+            other = Tensor(other, requires_grad=False)
+        elif isinstance(other, Tensor):
+            return Tensor(self.data ** other.data, requires_grad=True, parents=[self, other], creation_op='pow')
+        else:
+            raise ValueError(f"Unsupported type for power: {type(other)}")
+    
     # Reverse Operations ============================================
     def __radd__(self, other):
         return self.__add__(other)

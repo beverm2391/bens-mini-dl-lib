@@ -21,5 +21,11 @@ def test_dense_backward():
 
     target = Tensor(np.array([1, 0])) # init target data
     
-    # TODO finish this test after implementing loss functions
-    assert True
+    loss = (output - target) ** 2 # calculate loss
+    loss.backward() # backpropagate loss
+
+    # calculate expected gradients
+    expected_weights_grad = np.array([[2, 4, 6], [0, 0, 0]])
+    expected_biases_grad = np.array([2, 4])
+
+    assert np.allclose(layer.weights.grad.data, expected_weights_grad), f"Expected {expected_weights_grad}, got {layer.weights.grad.data}"
