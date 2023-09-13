@@ -193,31 +193,53 @@ class Tensor:
         self.parents[0].backward(self.grad / self.parents[1].data)  # a' / b
         self.parents[1].backward(-self.grad * self.parents[0].data / (self.parents[1].data ** 2))  # -a / b^2
         
-    @make_tensor
-    def __pow__(self, other: Union[int, float, 'Tensor']) -> 'Tensor':
-        result = np.power(self.data, other.data)
-        return Tensor(result, requires_grad=(self.requires_grad or other.requires_grad), parents=[self, other], creation_op="pow")
+    # ! I accidentally implemented f(a, b) = a^b instead of f(x) = x^n
+    # @make_tensor
+    # def __pow__(self, other: Union[int, float, 'Tensor']) -> 'Tensor':
+    #     result = np.power(self.data, other.data)
+    #     return Tensor(result, requires_grad=(self.requires_grad or other.requires_grad), parents=[self, other], creation_op="pow")
+    
+    # def backward_pow(self):
+    #     """
+    #     f(a, b) = a^b
+    #     df/da = b * a^(b - 1)
+    #     df/db = a^b * ln(a)
+    #     """
+    #     a = self.parents[0].data
+    #     b = self.parents[1].data
+
+    #     # find partial derivatives
+    #     grad_wrt_a = self.grad * b * (a ** (b - 1)) # Partial derivative with respect to 'a'
+
+    #     # Partial derivative with respect to 'b', replacing NaNs and Infs with zero
+    #     with np.errstate(divide='ignore', invalid='ignore'): # do this to ignore divide by zero errors
+    #         grad_wrt_b = self.grad * (a ** b) * np.log(a)
+    #     grad_wrt_b = np.where(np.isfinite(grad_wrt_b), grad_wrt_b, 0) # replace inf and nan with 0
+
+    #     # backpropogate
+    #     self.parents[0].backward(grad_wrt_a)
+    #     self.parents[1].backward(grad_wrt_b)
+
+    # ! Here's the correct implementation
+    def __pow__(self, n: Union[int, float]) -> 'Tensor':
+        if not isinstance(n, (int, float)):
+            raise NotImplementedError("Only supporting int/float powers for now")
+        
+        result = np.power(self.data, n)
+        return Tensor(result, requires_grad=self.requires_grad, parents=[self], creation_op="pow")
     
     def backward_pow(self):
         """
-        f(a, b) = a^b
-        df/da = b * a^(b - 1)
-        df/db = a^b * ln(a)
+        f(x) = x^n
+        df/dx = n * x^(n - 1)
         """
-        a = self.parents[0].data
-        b = self.parents[1].data
+        n = self.parents[0].data
 
-        # find partial derivatives
-        grad_wrt_a = self.grad * b * (a ** (b - 1)) # Partial derivative with respect to 'a'
-
-        # Partial derivative with respect to 'b', replacing NaNs and Infs with zero
-        with np.errstate(divide='ignore', invalid='ignore'): # do this to ignore divide by zero errors
-            grad_wrt_b = self.grad * (a ** b) * np.log(a)
-        grad_wrt_b = np.where(np.isfinite(grad_wrt_b), grad_wrt_b, 0) # replace inf and nan with 0
+        # find partial derivative
+        grad_wrt_x = self.grad * n * (self.data ** (n - 1))
 
         # backpropogate
-        self.parents[0].backward(grad_wrt_a)
-        self.parents[1].backward(grad_wrt_b)
+        self.parents[0].backward(grad_wrt_x)
 
     @make_tensor
     def __matmul__(self, other):
