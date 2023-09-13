@@ -102,8 +102,8 @@ class Tensor:
 
         # if we do have a gradient passed in, either initalize self.grad or accumulate it
 
-        print(f"Grad: {grad}")
-        print(f"Self.grad: {self.grad}")
+        # print(f"Grad: {grad}")
+        # print(f"Self.grad: {self.grad}")
 
         if self.grad is None:
             self.grad = grad
@@ -283,10 +283,6 @@ class Tensor:
         """
         (sum(a))' = 1 for each element in a
         """
-        print("Im in the backward_sum function now")
-        print(f"self.grad: {self.grad}")
-        print(f"self.data: {self.data}")
-        print(f"self.grad * np.ones_like(self.data): {self.grad * np.ones_like(self.data)}")
         self.parents[0].backward(self.grad * np.ones_like(self.data)) # 1 for each element in a
 
     # Shape Operations ===========================================
