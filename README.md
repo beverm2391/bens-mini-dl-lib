@@ -10,13 +10,15 @@ This adds a .pth file to the site-packages directory containing the project's ro
 - [X] Add a Dense layer
 - [X] Add auto differentiation
 - [X] Add basic loss functions
+- [X] Fix autodiff for scalars and shape mismatches
   
 ## TODO
 
 I'm currently working on refactoring my base Tensor to handle more dtypes for both forward and backward (autograd) operations. This has been significantly more complex than I thought... but that means I'm learning a lot.
 
-- [ ] Fix autodiff for scalars and shape mismatches
+
 - [ ] Test backprop on dense layer
+  - [ ] fix backward_pow func (need to handle edge cases)
 - [ ] Find some way to write tests for the activation functions
 - [ ] Add a network class
 - [ ] Add a training loop
