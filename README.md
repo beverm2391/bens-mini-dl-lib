@@ -15,8 +15,6 @@ This adds a .pth file to the site-packages directory containing the project's ro
   
 ## TODO
 
-I'm currently working on refactoring my base Tensor to handle more dtypes for both forward and backward (autograd) operations. This has been significantly more complex than I thought... but that means I'm learning a lot.
-
 - [ ] Finish replicating/reverse engineering Karpathy's [micrograd](https://github.com/karpathy/micrograd)
 - [ ] Test backprop on dense layer
 - [ ] Find some way to write tests for the activation functions
