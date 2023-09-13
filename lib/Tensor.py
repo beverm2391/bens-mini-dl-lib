@@ -93,10 +93,17 @@ class Tensor:
         #     raise ValueError(f"The shape of the grad {grad.shape} does not match the shape of the data {self.data.shape}")
 
         # if we do have a gradient passed in, either initalize self.grad or accumulate it
+
+        print(f"Grad: {grad}")
+        print(f"Self.grad: {self.grad}")
+
         if self.grad is None:
             self.grad = grad
         else:
-            self.grad += grad  # accumulate gradient
+            # ! this doesnt work (in place operation) because of broadcasting
+            # self.grad += grad  # accumulate gradient
+            # ! have to do this because of the broadcasting
+            self.grad = self.grad + grad  # accumulate gradient
 
         # if the tensor was created by the user, return
         if self.creation_op is None:
