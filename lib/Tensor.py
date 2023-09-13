@@ -7,9 +7,8 @@ class Tensor:
     """
     Tensor with Auto Differentiation, v2
     """
-    def __init__(self, data: Union[int, float, np.ndarray], dtype: str = 'float', requires_grad: bool = False, parents=None, creation_op=None):
-        self.data = np.array(data, dtype=dtype) # The data contained in the tensor
-        self.dtype = dtype # The data type of the tensor
+    def __init__(self, data: Union[int, float, np.ndarray], requires_grad: bool = False, parents=None, creation_op=None):
+        self.data = self._process_data(data) # The data of the tensor
 
         self.shape = self.data.shape # The shape of the tensor
         self.ndim = self.data.ndim # The number of dimensions of the tensor
@@ -23,6 +22,15 @@ class Tensor:
 
         self.parents = parents or [] # Tensors from which this one was created
         self.creation_op = creation_op # The operation that created this tensor
+
+    def _process_data(data: Union[int, float, np.ndarray]):
+        allowed_types = {int, float, np.ndarray}
+        if not isinstance(data, allowed_types):
+            raise TypeError(f"Data must be one of {allowed_types}")
+        if isinstance(data, np.ndarray):
+            return data
+        else:
+            return np.array(data)
 
     @property
     def backward_ops(self):
