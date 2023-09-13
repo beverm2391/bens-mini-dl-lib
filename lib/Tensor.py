@@ -7,7 +7,7 @@ class Tensor:
     """
     Tensor with Auto Differentiation, v2
     """
-    def __init__(self, data: Union[int, float, np.ndarray], requires_grad: bool = False, parents=None, creation_op=None):
+    def __init__(self, data: Union[int, float, list, np.ndarray], requires_grad: bool = False, parents=None, creation_op=None):
         self.data = self._process_data(data) # The data of the tensor
 
         self.shape = self.data.shape # The shape of the tensor
@@ -23,8 +23,8 @@ class Tensor:
         self.parents = parents or [] # Tensors from which this one was created
         self.creation_op = creation_op # The operation that created this tensor
 
-    def _process_data(data: Union[int, float, np.ndarray]):
-        allowed_types = {int, float, np.ndarray}
+    def _process_data(self, data: Union[int, float, list, np.ndarray]) -> np.ndarray:
+        allowed_types = (int, float, list, np.ndarray)
         if not isinstance(data, allowed_types):
             raise TypeError(f"Data must be one of {allowed_types}")
         if isinstance(data, np.ndarray):
