@@ -47,6 +47,20 @@ class Tensor:
         """
         self.grad = np.zeros_like(self.data)
 
+    def broadast_wrap(func):
+        """
+        A decorator to broadcast the gradient to the shape of the data
+        """
+        @wraps(func)
+        def wrapper(self, other):
+            # try to broadcast the gradient to the shape of the data
+            try:
+                grad = np.broadcast_to(self.grad, self.data.shape)
+            except ValueError:
+                raise ValueError(f"Cannot broadcast gradient of shape {self.grad.shape} to shape {self.data.shape}")
+            return func(self, other, grad)
+        return wrapper
+
     def backward(self, grad: np.ndarray = None):
         # the grad should be an array (not a Tensor) just like the data attribute
         """
@@ -61,18 +75,25 @@ class Tensor:
         if grad is None:  # if we call backward without passing a gradient, initialize the gradient to 1
             grad = np.ones_like(self.data)
 
-        # ? DEBUG -----------------------------------------------
-        print(f"Backpropagating through tensor with creation_op {self.creation_op}")
-        print(f"Current grad shape: {grad.shape}, self.data shape: {self.data.shape}")
+        # ! this was a bunch of logic to handle shape mismatches, now im handling it individually in each op
+        # # ? DEBUG -----------------------------------------------
+        # print(f"Backpropagating through tensor with creation_op {self.creation_op}")
+        # print(f"Current grad shape: {grad.shape}, self.data shape: {self.data.shape}")
 
-        # trying some broadcasting logic
-        if grad.shape != self.data.shape:
-            # try to broadcast the gradient to the shape of the data
-            try:
-                grad = np.broadcast_to(grad, self.data.shape)
-            except ValueError:
-                raise ValueError(f"Cannot broadcast gradient of shape {grad.shape} to shape {self.data.shape}")
-        # ? ------------------------------------------------------
+        # # trying some broadcasting logic
+        # if grad.shape != self.data.shape:
+        #     # try to broadcast the gradient to the shape of the data
+        #     try:
+        #         grad = np.broadcast_to(grad, self.data.shape)
+        #     except ValueError:
+        #         raise ValueError(f"Cannot broadcast gradient of shape {grad.shape} to shape {self.data.shape}")
+        # # ? ------------------------------------------------------
+
+        # ! this will warn if a scalar is passed to an operation that has not been refactored to handle scalars
+        if np.isscalar(grad):
+            # Check if the operation has been refactored to handle scalars
+            if self.creation_op not in {}: #! Add more ops here
+                warnings.warn(f"The operation {self.creation_op} has not been refactored to handle scalars. Proceed with caution.")
 
         # Check if grad has the correct shape
         if grad.shape != self.data.shape:
