@@ -89,15 +89,8 @@ class Tensor:
         #         raise ValueError(f"Cannot broadcast gradient of shape {grad.shape} to shape {self.data.shape}")
         # # ? ------------------------------------------------------
 
-        # ! this will warn if a scalar is passed to an operation that has not been refactored to handle scalars
-        if np.isscalar(grad):
-            # Check if the operation has been refactored to handle scalars
-            if self.creation_op not in {}: #! Add more ops here
-                warnings.warn(f"The operation {self.creation_op} has not been refactored to handle scalars. Proceed with caution.")
-
-        # Check if grad has the correct shape
-        if grad.shape != self.data.shape:
-            raise ValueError(f"The shape of the grad {grad.shape} does not match the shape of the data {self.data.shape}")
+        # if grad.shape != self.data.shape:
+        #     raise ValueError(f"The shape of the grad {grad.shape} does not match the shape of the data {self.data.shape}")
 
         # if we do have a gradient passed in, either initalize self.grad or accumulate it
         if self.grad is None:
@@ -232,7 +225,29 @@ class Tensor:
         self.parents[1].backward(grad_wrt_second_parent)
 
 
-    # Reverse Operations =========================================
+    # Reverse Operations ============================================
+    def __radd__(self, other):
+        return self.__add__(other)
+
+    def __rsub__(self, other):
+        return Tensor(other - self.data)  # Note the order
+
+    def __rmul__(self, other):
+        return self.__mul__(other)
+
+    def __rtruediv__(self, other):
+        return Tensor(other / self.data)  # Note the order
+    
+    def __rpow__(self, other):
+        return Tensor(other ** self.data)
+    
+    def __rmatmul__(self, other):
+        if not isinstance(other, Tensor):
+            other = Tensor(other)
+        # The other array should be on the left-hand side now
+        # assuming self.data and other.data are NumPy arrays
+        result = np.matmul(other.data, self.data)
+        return Tensor(result)
 
     # Unary Operations ===========================================
 
@@ -253,6 +268,10 @@ class Tensor:
         """
         (sum(a))' = 1 for each element in a
         """
+        print("Im in the backward_sum function now")
+        print(f"self.grad: {self.grad}")
+        print(f"self.data: {self.data}")
+        print(f"self.grad * np.ones_like(self.data): {self.grad * np.ones_like(self.data)}")
         self.parents[0].backward(self.grad * np.ones_like(self.data)) # 1 for each element in a
 
     # Shape Operations ===========================================
