@@ -61,6 +61,23 @@ class Tensor:
         if grad is None:  # if we call backward without passing a gradient, initialize the gradient to 1
             grad = np.ones_like(self.data)
 
+        # ? DEBUG -----------------------------------------------
+        print(f"Backpropagating through tensor with creation_op {self.creation_op}")
+        print(f"Current grad shape: {grad.shape}, self.data shape: {self.data.shape}")
+
+        # trying some broadcasting logic
+        if grad.shape != self.data.shape:
+            # try to broadcast the gradient to the shape of the data
+            try:
+                grad = np.broadcast_to(grad, self.data.shape)
+            except ValueError:
+                raise ValueError(f"Cannot broadcast gradient of shape {grad.shape} to shape {self.data.shape}")
+        # ? ------------------------------------------------------
+
+        # Check if grad has the correct shape
+        if grad.shape != self.data.shape:
+            raise ValueError(f"The shape of the grad {grad.shape} does not match the shape of the data {self.data.shape}")
+
         # if we do have a gradient passed in, either initalize self.grad or accumulate it
         if self.grad is None:
             self.grad = grad
@@ -251,3 +268,13 @@ class Tensor:
 
     def __repr__(self):
         return f"Tensor({self.data}, requires_grad={self.requires_grad})"
+
+
+def trace_requires_grad(tensor):
+    """
+    Util function to trace the requires_grad attribute of a tensor and its parents, for debugging
+    """
+    print(f"Tensor: {tensor}, requires_grad={tensor.requires_grad}")
+    if hasattr(tensor, 'parents'):
+        for parent in tensor.parents:
+            trace_requires_grad(parent)
