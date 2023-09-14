@@ -117,7 +117,7 @@ class Tensor:
         if self.creation_op is None:
             return
         
-        print(f"Operation: {self.creation_op}")
+        # print(f"Operation: {self.creation_op}")
     
         # time to backpropogate
         backward_op = self.backward_ops.get(self.creation_op, None) # get the correct backward op
@@ -126,7 +126,7 @@ class Tensor:
         else:
             raise NotImplementedError(f"Backward op for {self.creation_op} not implemented")
         
-    def make_tensor(func):
+    def make_tensor(func) -> 'Tensor':
         """
         Decorator to convert the 'other' arg to a tensor if its not already a tensor
         """
@@ -230,22 +230,18 @@ class Tensor:
         if not isinstance(n, (int, float)):
             raise NotImplementedError("Only supporting int/float powers for now")
         
-        result = np.power(self.data, n)
-        return Tensor(result, requires_grad=self.requires_grad, parents=[self, n], creation_op="pow")
+        result = np.power(self.data, n) # x^n (element-wise)
+        return Tensor(result, requires_grad=self.requires_grad, parents=[self, n], creation_op="pow") # return a new tensor
     
     def backward_pow(self):
         """
         df/dx = n * x^(n - 1)
         """
         # n = self.parents[0].data
-        n = self.parents[1]
         x = self.parents[0].data
+        n = self.parents[1]
 
-        print(f"N {n}")
-        print(f"Self.grad {self.grad[0]}")
-        print(f"Self.data {self.data[0]}")
-
-        # find partial derivative
+        # find partial derivatives
         grad_wrt_x = self.grad * n * (x ** (n - 1))
 
         # backpropogate
