@@ -51,20 +51,20 @@ class Value:
     def backward(self):
         
         # topological order all of the children in the graph
-        topo = []
-        visited = set()
-        def build_topo(v):
-            if v not in visited:
-                visited.add(v)
-                for child in v._prev:
-                    build_topo(child)
-                topo.append(v)
-        build_topo(self)
+        topo = [] # empty list
+        visited = set() # empty set
+        def build_topo(v): 
+            if v not in visited: # if we haven't visited the node yet
+                visited.add(v) # mark as visited
+                for child in v._prev: # recursively build topological ordering
+                    build_topo(child) # recursive call
+                topo.append(v) # add to topological sort
+        build_topo(self) # start from self
 
         # go one variable at a time and apply the chain rule to get its gradient
-        self.grad = 1
-        for v in reversed(topo):
-            v._backward()
+        self.grad = 1 # gradient of final node is 1
+        for v in reversed(topo): # iterate in reverse topological order
+            v._backward() # call the _backward method
 
     def __neg__(self):
         return self * -1
