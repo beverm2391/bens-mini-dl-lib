@@ -116,6 +116,8 @@ class Tensor:
         # if the tensor was created by the user, return
         if self.creation_op is None:
             return
+        
+        print(f"Operation: {self.creation_op}")
     
         # time to backpropogate
         backward_op = self.backward_ops.get(self.creation_op, None) # get the correct backward op
@@ -222,21 +224,29 @@ class Tensor:
 
     # ! Here's the correct implementation
     def __pow__(self, n: Union[int, float]) -> 'Tensor':
+        """
+        f(x) = x^n
+        """
         if not isinstance(n, (int, float)):
             raise NotImplementedError("Only supporting int/float powers for now")
         
         result = np.power(self.data, n)
-        return Tensor(result, requires_grad=self.requires_grad, parents=[self], creation_op="pow")
+        return Tensor(result, requires_grad=self.requires_grad, parents=[self, n], creation_op="pow")
     
     def backward_pow(self):
         """
-        f(x) = x^n
         df/dx = n * x^(n - 1)
         """
-        n = self.parents[0].data
+        # n = self.parents[0].data
+        n = self.parents[1]
+        x = self.parents[0].data
+
+        print(f"N {n}")
+        print(f"Self.grad {self.grad[0]}")
+        print(f"Self.data {self.data[0]}")
 
         # find partial derivative
-        grad_wrt_x = self.grad * n * (self.data ** (n - 1))
+        grad_wrt_x = self.grad * n * (x ** (n - 1))
 
         # backpropogate
         self.parents[0].backward(grad_wrt_x)
