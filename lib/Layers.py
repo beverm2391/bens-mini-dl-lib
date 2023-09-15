@@ -20,6 +20,12 @@ class Layer:
         """
         raise NotImplementedError
     
+    def parameters(self):
+        """
+        Returns the parameters of this layer.
+        """
+        raise NotImplementedError
+    
     def __call__(self, input_data):
         """
         A convenient way to chain operations.
