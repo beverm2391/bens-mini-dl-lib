@@ -8,7 +8,7 @@ class Value:
         self._op = _op # the op that produced this node, for graphviz / debugging / etc
 
     def __add__(self, other):
-        other = other if isinstance(Value) else Value(other)
+        other = other if isinstance(other, Value) else Value(other)
         out = Value(self.data + other.data, (self, other), '+')
 
         def _backward():
@@ -19,7 +19,7 @@ class Value:
         return out
 
     def __mul__(self, other):
-        other = other if isinstance(Value) else Value(other)
+        other = other if isinstance(other, Value) else Value(other)
         out = Value(self.data * other.data, (self, other), '*')
 
         def _backward():

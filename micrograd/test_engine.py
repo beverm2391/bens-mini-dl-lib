@@ -28,3 +28,7 @@ def test_sanity_check():
     assert ymg.data == ypt.data.item()  # Check if the forward pass results are the same in Micrograd and PyTorch
     # backward pass went well
     assert xmg.grad == xpt.grad.item()  # Check if the gradients computed during backpropagation are the same
+
+if __name__ == '__main__':
+    test_sanity_check()  # Run the sanity check
+    print("Sanity check passed!")  # Print a message indicating that the sanity check passed
