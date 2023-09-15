@@ -12,17 +12,22 @@ This adds a .pth file to the site-packages directory containing the project's ro
 - [X] Add basic loss functions
 - [X] Fix autodiff for scalars and shape mismatches
 - [X] fix backward_pow func (need to handle edge cases)
+- [X] Test backprop on dense layer
+- [X] Add optimizers
   
 ## TODO
 
 - [ ] Finish replicating/reverse engineering Karpathy's [micrograd](https://github.com/karpathy/micrograd)
-- [ ] Test backprop on dense layer
-- [ ] Find some way to write tests for the activation functions
+  - [ ] update my backward method to use Top sort?
+- [ ] write sanity checks (not unit tests) for each function in the Tensor class. make sure nothing weird is happening
+- [ ] Figure out where activation functions will go with my current abstractions
+  - [ ] they will need backprop methods
+  - [ ] test dense layer with activation functions
 - [ ] Add a network class
 - [ ] Add a training loop
 - [ ] Add data handling
 - [ ] Add evaluation
-- [ ] Add optimizers
+- [ ] Add dynamic lr optimizer
 - [ ] Add regularization
 - [ ] Add examples and docs
 - [ ] Look into [this](https://vmartin.fr/automatic-jacobian-matrix-computation-with-sympy.html) jacobian matrix optimization
