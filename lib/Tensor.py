@@ -1,7 +1,10 @@
+from __future__ import annotations # this is needed to use Tensor in the type hint of Tensor
+
 import numpy as np
 import warnings
 from functools import wraps
 from typing import Union
+
 
 class Tensor:
     """
@@ -126,7 +129,7 @@ class Tensor:
         else:
             raise NotImplementedError(f"Backward op for {self.creation_op} not implemented")
         
-    def make_tensor(func) -> 'Tensor':
+    def make_tensor(func) -> Tensor:
         """
         Decorator to convert the 'other' arg to a tensor if its not already a tensor
         """
@@ -139,7 +142,7 @@ class Tensor:
             
     # Basic Operations ===========================================
     @make_tensor
-    def __add__(self,  other: Union[int, float, 'Tensor']) -> 'Tensor':
+    def __add__(self,  other: Union[int, float, Tensor]) -> Tensor:
         """
         a + b
         """
@@ -154,7 +157,7 @@ class Tensor:
         self.parents[1].backward(self.grad)
 
     @make_tensor
-    def __sub__(self, other: Union[int, float, 'Tensor']) -> 'Tensor':
+    def __sub__(self, other: Union[int, float, Tensor]) -> Tensor:
         """
         a - b
         """
@@ -170,7 +173,7 @@ class Tensor:
         self.parents[1].backward(-self.grad)
     
     @make_tensor
-    def __mul__(self, other: Union[int, float, 'Tensor']) -> 'Tensor':
+    def __mul__(self, other: Union[int, float, Tensor]) -> Tensor:
         result = np.multiply(self.data, other.data)
         return Tensor(result, requires_grad=(self.requires_grad or other.requires_grad), parents=[self, other], creation_op="mul")
     
@@ -183,7 +186,7 @@ class Tensor:
         self.parents[1].backward(self.grad * self.parents[0].data) # a * b'
     
     @make_tensor
-    def __truediv__(self, other: Union[int, float, 'Tensor']) -> 'Tensor':
+    def __truediv__(self, other: Union[int, float, Tensor]) -> Tensor:
         result = np.divide(self.data, other.data)
         return Tensor(result, requires_grad=(self.requires_grad or other.requires_grad), parents=[self, other], creation_op="div")
     
@@ -197,7 +200,7 @@ class Tensor:
         
     # ! I accidentally implemented f(a, b) = a^b instead of f(x) = x^n
     # @make_tensor
-    # def __pow__(self, other: Union[int, float, 'Tensor']) -> 'Tensor':
+    # def __pow__(self, other: Union[int, float, Tensor]) -> Tensor:
     #     result = np.power(self.data, other.data)
     #     return Tensor(result, requires_grad=(self.requires_grad or other.requires_grad), parents=[self, other], creation_op="pow")
     
@@ -223,7 +226,7 @@ class Tensor:
     #     self.parents[1].backward(grad_wrt_b)
 
     # ! Here's the correct implementation
-    def __pow__(self, n: Union[int, float]) -> 'Tensor':
+    def __pow__(self, n: Union[int, float]) -> Tensor:
         """
         f(x) = x^n
         """
