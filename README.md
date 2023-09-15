@@ -14,6 +14,7 @@ This adds a .pth file to the site-packages directory containing the project's ro
 - [X] fix backward_pow func (need to handle edge cases)
 - [X] Test backprop on dense layer
 - [X] Add optimizers
+- [X] Add checks for numerical instability
   
 ## TODO
 
