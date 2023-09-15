@@ -5,7 +5,6 @@ import warnings
 from functools import wraps
 from typing import Union
 
-
 class Tensor:
     """
     Tensor with Auto Differentiation, v2
@@ -128,7 +127,7 @@ class Tensor:
                 other = Tensor(other, requires_grad=self.requires_grad)
             return func(self, other)
         return wrapper
-    
+
     def keep_stable(func):
         """
         Decorator to handle numerical stability/instability. Values like nan, inf, -inf, etc. can cause problems
@@ -137,14 +136,16 @@ class Tensor:
         def wrapper(*args, **kwargs):
             tensors = [arg for arg in args if isinstance(arg, Tensor)]
             for tensor in tensors:
-                if np.any(np.isinf(tensor.data) or np.isnan(tensor.data)):
-                    raise ValueError(f"Numerical instability detected in {func.__name__}: Inf or NaN values in tensor.data")
+                if np.any(np.isinf(tensor.data) | np.isnan(tensor.data)):
+                    # raise ValueError(f"Numerical instability detected in {func.__name__}: Inf or NaN values in tensor.data")
+                    warnings.warn(f"Numerical instability detected in {func.__name__}: Inf or NaN values in tensor.data")
 
             result = func(*args, **kwargs)
 
             if isinstance(result, Tensor):
-                if np.any(np.isinf(result.data) or np.isnan(result.data)):
-                    raise ValueError(f"Numerical instability detected in {func.__name__}: Inf or NaN values in tensor.data")
+                if np.any(np.isinf(result.data) | np.isnan(result.data)):
+                    # raise ValueError(f"Numerical instability detected in {func.__name__}: Inf or NaN values in tensor.data")
+                    warnings.warn(f"Numerical instability detected in {func.__name__}: Inf or NaN values in tensor.data")
                 
             return result
         return wrapper
