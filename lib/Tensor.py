@@ -78,8 +78,8 @@ class Tensor:
         This function will be called recursively to backpropogate gradients (auto differentiation)
         """
         if not self.requires_grad: # if gradient is not required, return
-            # warnings.warn("You called backward on a tensor that does not require gradients")
-            raise Exception("You called backward on a tensor that does not require gradients")
+            # ? Most frameworks silently return here but I'm keeping the warning in for now
+            warnings.warn("You called backward on a tensor that does not require gradients")
             return
         
         # if we dont have a gradient passed in, initialize it to 1
