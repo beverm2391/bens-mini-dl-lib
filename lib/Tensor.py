@@ -129,7 +129,7 @@ class Tensor:
             return func(self, other)
         return wrapper
     
-    def numerical_stability(func):
+    def keep_stable(func):
         """
         Decorator to handle numerical stability/instability. Values like nan, inf, -inf, etc. can cause problems
         """
@@ -239,6 +239,7 @@ class Tensor:
     #     self.parents[1].backward(grad_wrt_b)
 
     # ! Here's the correct implementation
+    @keep_stable
     def __pow__(self, n: Union[int, float]) -> Tensor:
         """
         f(x) = x^n
@@ -249,6 +250,7 @@ class Tensor:
         result = np.power(self.data, n) # x^n (element-wise)
         return Tensor(result, requires_grad=self.requires_grad, parents=[self, n], creation_op="pow") # return a new tensor
     
+    @keep_stable
     def backward_pow(self):
         """
         df/dx = n * x^(n - 1)
@@ -264,6 +266,7 @@ class Tensor:
         self.parents[0].backward(grad_wrt_x)
 
     @make_tensor
+    @keep_stable # make sure this goes after make_tensor
     def __matmul__(self, other):
         """
         Matrix multiplication
@@ -271,6 +274,7 @@ class Tensor:
         result = np.matmul(self.data, other.data)
         return Tensor(result, requires_grad=(self.requires_grad or other.requires_grad), parents=[self, other], creation_op="matmul")
 
+    @keep_stable
     def backward_matmul(self):
         """
         (A @ B)' = A' @ B + A @ B'
