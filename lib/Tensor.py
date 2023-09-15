@@ -26,6 +26,8 @@ class Tensor:
         self.parents = parents or [] # Tensors from which this one was created
         self.creation_op = creation_op # The operation that created this tensor
 
+        self.epsilon = 1e-8 # A small number to prevent divide by zero errors
+
     def _process_data(self, data: Union[int, float, list, np.ndarray]) -> np.ndarray:
         allowed_types = (int, float, list, np.ndarray)
         if not isinstance(data, allowed_types):
@@ -126,6 +128,26 @@ class Tensor:
                 other = Tensor(other, requires_grad=self.requires_grad)
             return func(self, other)
         return wrapper
+    
+    def numerical_stability(func):
+        """
+        Decorator to handle numerical stability/instability. Values like nan, inf, -inf, etc. can cause problems
+        """
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            tensors = [arg for arg in args if isinstance(arg, Tensor)]
+            for tensor in tensors:
+                if np.any(np.isinf(tensor.data) or np.isnan(tensor.data)):
+                    raise ValueError(f"Numerical instability detected in {func.__name__}: Inf or NaN values in tensor.data")
+
+            result = func(*args, **kwargs)
+
+            if isinstance(result, Tensor):
+                if np.any(np.isinf(result.data) or np.isnan(result.data)):
+                    raise ValueError(f"Numerical instability detected in {func.__name__}: Inf or NaN values in tensor.data")
+                
+            return result
+        return wrapper
             
     # Basic Operations ===========================================
     @make_tensor
@@ -174,7 +196,11 @@ class Tensor:
     
     @make_tensor
     def __truediv__(self, other: Union[int, float, Tensor]) -> Tensor:
-        result = np.divide(self.data, other.data)
+        if other.data > self.epsilon: # if denominator is greater than epsilon (fuzz value)
+            result = np.divide(self.data, other.data)
+        else:
+            result = np.divide(self.data, other.data + self.epsilon) # add epsilon to denominator to prevent divide by zero errors
+            warnings.warn(f"Almost divide by zero in {self.__truediv__}, denominator was {other.data}, prevented by adding epsilon {self.epsilon}")
         return Tensor(result, requires_grad=(self.requires_grad or other.requires_grad), parents=[self, other], creation_op="div")
     
     def backward_div(self):
