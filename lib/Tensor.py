@@ -58,19 +58,6 @@ class Tensor:
         """
         self.grad = np.zeros_like(self.data)
 
-    def broadast_wrap(func):
-        """
-        A decorator to broadcast the gradient to the shape of the data
-        """
-        @wraps(func)
-        def wrapper(self, other):
-            # try to broadcast the gradient to the shape of the data
-            try:
-                grad = np.broadcast_to(self.grad, self.data.shape)
-            except ValueError:
-                raise ValueError(f"Cannot broadcast gradient of shape {self.grad.shape} to shape {self.data.shape}")
-            return func(self, other, grad)
-        return wrapper
 
     def backward(self, grad: np.ndarray = None):
         # the grad should be an array (not a Tensor) just like the data attribute
