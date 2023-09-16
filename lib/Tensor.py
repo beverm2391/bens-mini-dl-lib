@@ -24,6 +24,7 @@ class Tensor:
 
         self.parents = parents or [] # Tensors from which this one was created
         self.creation_op = creation_op # The operation that created this tensor
+        self.axis = None # The axis along which to perform a reduction operation
 
         self.epsilon = 1e-8 # A small number to prevent divide by zero errors
 
@@ -319,13 +320,51 @@ class Tensor:
     # Reduction Operations =======================================
     def sum(self, axis=None):
         result = np.sum(self.data, axis=axis)
-        return Tensor(result, requires_grad=self.requires_grad, parents=[self], creation_op='sum')
+        return Tensor(result, requires_grad=self.requires_grad, parents=[self], creation_op='sum', axis=axis)
     
     def backward_sum(self):
         """
-        (sum(a))' = 1 for each element in a
+        (sum(a))' = 1 for each element
         """
-        self.parents[0].backward(self.grad * np.ones_like(self.data)) # 1 for each element in a
+        grad_shape = list(self.parents[0].data.shape) # get the shape of the gradient
+        if self.axis is not None: # if we are reducing along an axis
+            grad_shape[self.axis] = 1 # set the axis to 1
+        grad = np.ones(grad_shape) * self.grad # create a gradient of ones with the same shape as the data
+        self.parents[0].backward(grad) # backpropogate the gradient
+
+    def max(self, axis=None):
+        result = np.max(self.data, axis=axis)
+        return Tensor(result, requires_grad=self.requires_grad, parents=[self], creation_op='max', axis=axis)
+    
+    def backward_max(self):
+        """
+        (max(a))' = 1 for each element in a
+        """
+        grad = np.zeros_like(self.parents[0].data)
+        # axis=None means max over all elements
+        if self.axis is None:
+            index = np.unravel_index(np.argmax(self.parents[0].data), self.parents[0].data.shape)
+        else:
+            index = np.argmax(self.parents[0].data, axis=self.axis)
+        np.put_along_axis(grad, index, self.grad, axis=self.axis)
+        self.parents[0].backward(grad)
+
+    def min(self, axis=None):
+        result = np.min(self.data, axis=axis)
+        return Tensor(result, requires_grad=self.requires_grad, parents=[self], creation_op='min', axis=axis)
+
+    def backward_min(self):
+        """
+        (min(a))' = 1 for each element in a
+        """
+        grad = np.zeros_like(self.parents[0].data)
+        # axis=None means min over all elements
+        if self.axis is None:
+            index = np.unravel_index(np.argmin(self.parents[0].data), self.parents[0].data.shape)
+        else:
+            index = np.argmin(self.parents[0].data, axis=self.axis)
+        np.put_along_axis(grad, index, self.grad, axis=self.axis)
+        self.parents[0].backward(grad)
 
     # Shape Operations ===========================================
     def transpose(self):
