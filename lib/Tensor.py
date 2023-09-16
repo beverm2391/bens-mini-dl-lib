@@ -346,6 +346,15 @@ class Tensor:
 
     # Utils =====================================================
 
+    def traces_requires_grad(self):
+        """
+        Util function to trace the requires_grad attribute of a tensor and its parents, for debugging
+        """
+        print(f"Tensor: {self}, requires_grad={self.requires_grad}")
+        if hasattr(self, 'parents'):
+            for parent in self.parents:
+                parent.traces_requires_grad()
+
     # Other =====================================================
 
     def __eq__(self, other):
@@ -360,13 +369,3 @@ class Tensor:
 
     def __repr__(self):
         return f"Tensor({self.data}, requires_grad={self.requires_grad})"
-
-
-def trace_requires_grad(tensor):
-    """
-    Util function to trace the requires_grad attribute of a tensor and its parents, for debugging
-    """
-    print(f"Tensor: {tensor}, requires_grad={tensor.requires_grad}")
-    if hasattr(tensor, 'parents'):
-        for parent in tensor.parents:
-            trace_requires_grad(parent)
