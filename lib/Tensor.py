@@ -290,21 +290,13 @@ class Tensor:
 
 
     # Reverse Operations ============================================
-    def __radd__(self, other):
-        return self.__add__(other)
+    # must be explicitly defined
+    def __radd__(self, other): return self.__add__(other)
+    def __rsub__(self, other): return Tensor(other - self.data)  # Note the order
+    def __rmul__(self, other): return self.__mul__(other)
+    def __rtruediv__(self, other): return Tensor(other / self.data)  # Note the order
+    def __rpow__(self, other): return Tensor(other ** self.data) # Note the order
 
-    def __rsub__(self, other):
-        return Tensor(other - self.data)  # Note the order
-
-    def __rmul__(self, other):
-        return self.__mul__(other)
-
-    def __rtruediv__(self, other):
-        return Tensor(other / self.data)  # Note the order
-    
-    def __rpow__(self, other):
-        return Tensor(other ** self.data)
-    
     def __rmatmul__(self, other):
         if not isinstance(other, Tensor):
             other = Tensor(other)
@@ -312,16 +304,17 @@ class Tensor:
         # assuming self.data and other.data are NumPy arrays
         result = np.matmul(other.data, self.data)
         return Tensor(result)
+    
+    # In-place Operations ==========================================
+    # do this to avoid in-place broadcasting error in numpy
+    def __iadd__(self, other): return self.__add__(other)
+    def __isub__(self, other): return self.__sub__(other)
+    def __imul__(self, other): return self.__mul__(other)
 
     # Unary Operations ===========================================
-
     # no decorator because no args to convert to tensors
-    def __neg__(self):
-        return self * -1
-    
-    # no decorator because no args to convert to tensors
-    def __abs__(self):
-        return Tensor(np.abs(self.data), requires_grad=self.requires_grad, parents=[self], creation_op='abs')
+    def __neg__(self): return self * -1
+    def __abs__(self): return Tensor(np.abs(self.data), requires_grad=self.requires_grad, parents=[self], creation_op='abs')
 
     # Reduction Operations =======================================
     def sum(self, axis=None):
@@ -345,8 +338,7 @@ class Tensor:
         self.parents[0].backward(self.grad.transpose()) # A'
     
     @property
-    def T(self):
-        return self.transpose()
+    def T(self): return self.transpose()
 
     # Comparison Operations ======================================
 
