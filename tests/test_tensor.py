@@ -13,7 +13,9 @@ def test_basic_ops():
     def _basic_ops(a : Union[Tensor, torch.Tensor], b: Union[Tensor, torch.Tensor]):
         c = a + b # add, radd
         d = c - b # sub, rsub
-        x = c * d # mul, rmul
+        e = c * 2 # mul scalar
+        # ! This is failing below - backward pass is not working 
+        x = d * e # mul tensor (elementwise)
         # f = e / d # div, rdiv
         # g = f**2 # pow
         # h = -g # neg
