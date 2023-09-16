@@ -59,11 +59,11 @@ class Layer(Module):
         return self.forward(x)
 
 
-class ReLU(Module):
+class ReLU(Module): 
     @force_tensor
     def forward(self, x: Tensor) -> Tensor:
         self.input = x
-        return x.maximum(Tensor(np.zeros_like(x.data)))
+        return x.max(Tensor(np.zeros_like(x.data)))
 
     def backward(self, output_grad):
         return (self.input > 0) * output_grad

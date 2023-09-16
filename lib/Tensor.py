@@ -9,7 +9,7 @@ class Tensor:
     """
     Tensor with Auto Differentiation, v2
     """
-    def __init__(self, data: Union[int, float, list, np.ndarray], requires_grad: bool = False, parents=None, creation_op=None):
+    def __init__(self, data: Union[int, float, list, np.ndarray], requires_grad: bool = False, parents=None, creation_op=None, axis=None):
         self.data = self._process_data(data) # The data of the tensor
 
         self.shape = self.data.shape # The shape of the tensor
@@ -24,14 +24,24 @@ class Tensor:
 
         self.parents = parents or [] # Tensors from which this one was created
         self.creation_op = creation_op # The operation that created this tensor
-        self.axis = None # The axis along which to perform a reduction operation
+        self.axis = axis # The axis along which to perform a reduction operation
 
         self.epsilon = 1e-8 # A small number to prevent divide by zero errors
 
-    def _process_data(self, data: Union[int, float, list, np.ndarray]) -> np.ndarray:
+    def _check_type(self, data):
+        """
+        Check data type against allowed types, numpy dtypes, etc.
+        """
         allowed_types = (int, float, list, np.ndarray)
         if not isinstance(data, allowed_types):
-            raise TypeError(f"Data must be one of {allowed_types}")
+            if not np.issubdtype(data.dtype, np.number):
+                print(f"Data must be one of {[t.__name__ for t in allowed_types]}, is {type(data)}")
+                print(f"data {data}")
+                raise TypeError(f"Invalid Data Type")
+        return
+
+    def _process_data(self, data: Union[int, float, list, np.ndarray]) -> np.ndarray:
+        self._check_type(data) # check the type of the data
         if isinstance(data, np.ndarray):
             return data
         else:
@@ -51,6 +61,8 @@ class Tensor:
             "matmul": self.backward_matmul,
             "transpose": self.backward_transpose,
             "sum": self.backward_sum,
+            "max": self.backward_max,
+            "min": self.backward_min,
         }
         return ops
 
@@ -71,31 +83,12 @@ class Tensor:
             warnings.warn("You called backward on a tensor that does not require gradients")
             return
         
+        if self.data.size != 1 and grad is None: # if the tensor is not a scalar and we dont have a gradient passed in, raise an error
+            raise RuntimeError("grad can be implicitly created only for scalar outputs")
+
         # if we dont have a gradient passed in, initialize it to 1
         if grad is None:  # if we call backward without passing a gradient, initialize the gradient to 1
             grad = np.ones_like(self.data)
-
-        # ! this was a bunch of logic to handle shape mismatches, now im handling it individually in each op
-        # # ? DEBUG -----------------------------------------------
-        # print(f"Backpropagating through tensor with creation_op {self.creation_op}")
-        # print(f"Current grad shape: {grad.shape}, self.data shape: {self.data.shape}")
-
-        # # trying some broadcasting logic
-        # if grad.shape != self.data.shape:
-        #     # try to broadcast the gradient to the shape of the data
-        #     try:
-        #         grad = np.broadcast_to(grad, self.data.shape)
-        #     except ValueError:
-        #         raise ValueError(f"Cannot broadcast gradient of shape {grad.shape} to shape {self.data.shape}")
-        # # ? ------------------------------------------------------
-
-        # if grad.shape != self.data.shape:
-        #     raise ValueError(f"The shape of the grad {grad.shape} does not match the shape of the data {self.data.shape}")
-
-        # if we do have a gradient passed in, either initalize self.grad or accumulate it
-
-        # print(f"Grad: {grad}")
-        # print(f"Self.grad: {self.grad}")
 
         if self.grad is None:
             self.grad = grad
@@ -116,7 +109,7 @@ class Tensor:
         if backward_op:
             backward_op() # call the backward op
         else:
-            raise NotImplementedError(f"Backward op for {self.creation_op} not implemented")
+            raise NotImplementedError(f"Backward op for {self.creation_op} not implemented (make sure to add it in the backward_ops dict)")
 
     def make_tensor(func) -> Tensor:
         """
@@ -198,13 +191,10 @@ class Tensor:
     
     @make_tensor
     def __truediv__(self, other: Union[int, float, Tensor]) -> Tensor:
-        if other.data > self.epsilon: # if denominator is greater than epsilon (fuzz value)
-            result = np.divide(self.data, other.data)
-        else:
-            result = np.divide(self.data, other.data + self.epsilon) # add epsilon to denominator to prevent divide by zero errors
-            warnings.warn(f"Almost divide by zero in {self.__truediv__}, denominator was {other.data}, prevented by adding epsilon {self.epsilon}")
+        # TODO - Add a check for divide by zero
+        result = np.divide(self.data, other.data)
         return Tensor(result, requires_grad=(self.requires_grad or other.requires_grad), parents=[self, other], creation_op="div")
-    
+
     def backward_div(self):
         """
         (a / b)' = (a' * b - a * b') / b^2
@@ -311,6 +301,8 @@ class Tensor:
     def __iadd__(self, other): return self.__add__(other)
     def __isub__(self, other): return self.__sub__(other)
     def __imul__(self, other): return self.__mul__(other)
+    def __itruediv__(self, other): return self.__truediv__(other)
+    def __ipow__(self, other): return self.__pow__(other)
 
     # Unary Operations ===========================================
     # no decorator because no args to convert to tensors
