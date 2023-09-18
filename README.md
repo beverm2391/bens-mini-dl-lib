@@ -21,7 +21,7 @@ This adds a .pth file to the site-packages directory containing the project's ro
 ## TODO
 - [ ] update my backward method to use Top sort?
 - [ ] make a test suite that mirrors micrograd/write sanity checks for Tensor class
-  - [ ] figure out why certain operation chains are failing and others arent
+  - [ ] figure out why certain operation chains are failing and others aren't
 - [ ] Figure out where activation functions will go with my current abstractions
   - [ ] they will need backprop methods
   - [ ] test dense layer with activation functions
