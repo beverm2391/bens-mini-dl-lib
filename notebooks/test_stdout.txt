@@ -1,0 +1,45 @@
+Tensor: Tensor(1.3025601961564535, requires_grad=True). Grad: 1.0. requires_grad=True. creation_op=sum
+
+Tensor: Tensor([[-0.30148947 -0.68264496 -1.41474114]
+ [ 0.14756576  3.06753173  0.48633827]], requires_grad=True). Grad: [[1. 1. 1.]
+ [1. 1. 1.]]. requires_grad=True. creation_op=mul
+
+Tensor: Tensor([[-0.26966602 -0.67825161  0.63605284]
+ [ 0.27723155 -1.86370392 -0.4818378 ]], requires_grad=True). Grad: [[ 1.11801061  1.00647745 -2.22425096]
+ [ 0.53228342 -1.64593297 -1.00934022]]. requires_grad=True. creation_op=sub
+
+Tensor: Tensor([[ 0.55900531  0.50323873 -1.11212548]
+ [ 0.26614171 -0.82296649 -0.50467011]], requires_grad=True). Grad: [[ 0.57867857 -0.35002577 -0.95214528]
+ [ 1.08674652 -5.3733408  -1.97301583]]. requires_grad=True. creation_op=add
+
+Tensor: Tensor([[-0.26966602 -0.67825161  0.63605284]
+ [ 0.27723155 -1.86370392 -0.4818378 ]], requires_grad=True). Grad: [[ 1.69668919  0.65645168 -3.17639624]
+ [ 1.61902994 -7.01927378 -2.98235604]]. requires_grad=True. creation_op=None
+
+Tensor: Tensor([[ 0.82867132  1.18149034 -1.74817832]
+ [-0.01108984  1.04073743 -0.0228323 ]], requires_grad=True). Grad: [[ 0.57867857 -0.35002577 -0.95214528]
+ [ 1.08674652 -5.3733408  -1.97301583]]. requires_grad=True. creation_op=None
+
+Tensor: Tensor([[ 0.82867132  1.18149034 -1.74817832]
+ [-0.01108984  1.04073743 -0.0228323 ]], requires_grad=True). Grad: [[ 0.57867857 -0.35002577 -0.95214528]
+ [ 1.08674652 -5.3733408  -1.97301583]]. requires_grad=True. creation_op=None
+
+Tensor: Tensor([[ 1.11801061  1.00647745 -2.22425096]
+ [ 0.53228342 -1.64593297 -1.00934022]], requires_grad=True). Grad: [[-0.26966602 -0.67825161  0.63605284]
+ [ 0.27723155 -1.86370392 -0.4818378 ]]. requires_grad=True. creation_op=mul
+
+Tensor: Tensor([[ 0.55900531  0.50323873 -1.11212548]
+ [ 0.26614171 -0.82296649 -0.50467011]], requires_grad=True). Grad: [[ 0.57867857 -0.35002577 -0.95214528]
+ [ 1.08674652 -5.3733408  -1.97301583]]. requires_grad=True. creation_op=add
+
+Tensor: Tensor([[-0.26966602 -0.67825161  0.63605284]
+ [ 0.27723155 -1.86370392 -0.4818378 ]], requires_grad=True). Grad: [[ 1.69668919  0.65645168 -3.17639624]
+ [ 1.61902994 -7.01927378 -2.98235604]]. requires_grad=True. creation_op=None
+
+Tensor: Tensor([[ 0.82867132  1.18149034 -1.74817832]
+ [-0.01108984  1.04073743 -0.0228323 ]], requires_grad=True). Grad: [[ 0.57867857 -0.35002577 -0.95214528]
+ [ 1.08674652 -5.3733408  -1.97301583]]. requires_grad=True. creation_op=None
+
+Tensor: Tensor(2, requires_grad=True). Grad: [[-0.15074473 -0.34132248 -0.70737057]
+ [ 0.07378288  1.53376586  0.24316914]]. requires_grad=True. creation_op=None
+

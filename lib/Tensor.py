@@ -377,14 +377,17 @@ class Tensor:
 
     # Utils =====================================================
 
-    def traces_requires_grad(self):
+    def trace_requires_grad(self):
         """
         Util function to trace the requires_grad attribute of a tensor and its parents, for debugging
         """
-        print(f"Tensor: {self}, requires_grad={self.requires_grad}")
+        print(f"Tensor: {self}. Grad: {self.grad}. requires_grad={self.requires_grad}. creation_op={self.creation_op}\n")
         if hasattr(self, 'parents'):
             for parent in self.parents:
-                parent.traces_requires_grad()
+                if isinstance(parent, Tensor):
+                    parent.trace_requires_grad()
+                else:
+                    print("Parent is not a Tensor: ", parent)
 
     # Other =====================================================
 
