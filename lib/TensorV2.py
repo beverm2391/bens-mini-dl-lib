@@ -87,12 +87,13 @@ class Tensor:
         """
         Add two tensors
         """
+        rg = self.requires_grad or other.requires_grad
         out = np.add(self.data, other.data)
-        out = Tensor(out, (self, other), 'add', requires_grad=self.requires_grad)
+        out = Tensor(out, (self, other), 'add', requires_grad=rg)
 
         def _backward():
-            self.grad += out.grad
-            other.grad += out.grad
+            self.grad += out.grad.reshape(self.data.shape) # must reshape to broadcast correctly
+            other.grad += out.grad.reshape(other.data.shape) # must reshape to broadcast correctly
         out._backward = _backward
 
         return out
@@ -102,16 +103,17 @@ class Tensor:
         """
         Multiply two tensors
         """
+        rg = self.requires_grad or other.requires_grad
         out = np.multiply(self.data, other.data)
-        out = Tensor(out, (self, other), 'mul', requires_grad=self.requires_grad)
+        out = Tensor(out, (self, other), 'mul', requires_grad=rg)
 
         def _backward():
             """
             d/dx (x * y) = y
             d/dy (x * y) = x
             """
-            self.grad += other.data * out.grad
-            other.grad += self.data * out.grad
+            self.grad += (other.data * out.grad).reshape(self.data.shape) # must reshape to broadcast correctly
+            other.grad += (self.data * out.grad).reshape(other.data.shape) # must reshape to broadcast correctly
         out._backward = _backward
 
         return out
@@ -119,7 +121,7 @@ class Tensor:
     def __pow__(self, n: Union[int, float]):
         if not isinstance(n, (int, float)):
             raise NotImplementedError("Only supporting int/float powers for now")
-        
+
         out = np.power(self.data, n)
         out = Tensor(out, (self,), f'pow', requires_grad=self.requires_grad)
 
@@ -127,8 +129,8 @@ class Tensor:
             """
             d/dx (x^n) = n * x^(n-1)
             """
-            self.grad += (n * self.data**(n - 1)) * out.grad # update gradient
-        out._backward = _backward # override the default backward pass
+            self.grad += ((n * self.data**(n - 1)) * out.grad).reshape(self.data.shape) # must reshape to broadcast correctly
+        out._backward = _backward
 
         return out
 
@@ -144,8 +146,8 @@ class Tensor:
             """
             (A @ B)' = A' @ B + A @ B'
             """
-            self.grad += np.matmul(out.grad, other.data.T)
-            other.grad += np.matmul(self.data.T, out.grad)
+            self.grad += np.matmul(out.grad, other.data.T).reshape(self.data.shape)
+            other.grad += np.matmul(self.data.T, out.grad).reshape(other.data.shape)
 
         out._backward = _backward
         return out
@@ -173,7 +175,7 @@ class Tensor:
             """
             d/dx (sum(x)) = 1
             """
-            self.grad += np.ones_like(self.data) * out.grad
+            self.grad += (np.ones_like(self.data) * out.grad).reshape(self.data.shape)
         out._backward = _backward
 
         return out
@@ -189,10 +191,10 @@ class Tensor:
             """
             d/dx (transpose(x)) = 1
             """
-            self.grad += np.transpose(out.grad)
+            self.grad += np.transpose(out.grad) # transpose handles the shape correctly
         out._backward = _backward
 
         return out
-    
+
     @property
     def T(self): return self.transpose()
