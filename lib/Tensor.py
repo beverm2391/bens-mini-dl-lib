@@ -111,6 +111,7 @@ class Tensor:
         else:
             raise NotImplementedError(f"Backward op for {self.creation_op} not implemented (make sure to add it in the backward_ops dict)")
 
+
     def make_tensor(func) -> Tensor:
         """
         Decorator to convert the 'other' arg to a tensor if its not already a tensor
