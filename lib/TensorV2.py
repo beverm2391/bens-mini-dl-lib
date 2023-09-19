@@ -241,8 +241,38 @@ class Tensor:
     def __imod__(self, other): raise NotImplementedError(f"Operation not implemented")
     def __ipow__(self, other): raise NotImplementedError(f"Operation not implemented")
 
-    def log(self): return NotImplementedError
-    def exp(self): return NotImplementedError
+    def log(self):
+        if np.any(self.data <= 0):
+            raise ValueError("Log is only defined for x > 0")
+
+        out = np.log(self.data)
+        out = Tensor(out, (self,), 'log', requires_grad=self.requires_grad)
+
+        def _backward():
+            """
+            d/dx (log(x)) = 1 / x
+            """
+            self.grad += (out.grad / self.data).reshape(self.data.shape)
+
+        out._backward = _backward
+        return out
+
+    def exp(self):
+        out = np.exp(self.data)
+
+        if np.any(np.isinf(out)):
+            raise OverflowError("Exponential resulted in overflow")
+
+        out = Tensor(out, (self,), 'exp', requires_grad=self.requires_grad)
+
+        def _backward():
+            """
+            d/dx (exp(x)) = exp(x)
+            """
+            self.grad += (out.grad * out.data).reshape(self.data.shape)
+
+        out._backward = _backward
+        return out
 
     # reduction ops
     def sum(self, axis=None):
@@ -293,7 +323,19 @@ class Tensor:
 
         return out
 
-    def clip(self, min, max): raise NotImplementedError
+    def clip(self, min, max) -> Tensor:
+        out = np.clip(self.data, min, max)
+        out = Tensor(out, (self,), 'clip', requires_grad=self.requires_grad)
+
+        def _backward():
+            """
+            d/dx (clip(x)) = 1 if min <= x <= max, 0 otherwise
+            """
+            grad_clip = np.where((self.data >= min) & (self.data <= max), 1, 0)
+            self.grad += (out.grad * grad_clip).reshape(self.data.shape)
+
+        out._backward = _backward
+        return out
 
     def transpose(self):
         """
