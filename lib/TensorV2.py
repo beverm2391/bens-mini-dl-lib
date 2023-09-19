@@ -193,6 +193,7 @@ class Tensor:
     @make_tensor # ensure other is tensor (before we transpose it)
     def __rmatmul__(self, other): return self @ other.T
 
+    # reduction ops
     def sum(self, axis=None):
         """
         Sum the tensor along the given axis
@@ -209,6 +210,7 @@ class Tensor:
 
         return out
     
+    # ! Activation Functions ===================================================
     def transpose(self):
         """
         Transpose the tensor
@@ -243,6 +245,6 @@ def force_tensor(func):
     def wrapper(x, *args, **kwargs):
         if not isinstance(x, Tensor):
             # warnings.warn(f"Input data to layer {func.__name__} is not a Tensor. Converting to Tensor.")
-            raise TypeError(f"Input data to layer {func.__name__} need to be a tensor.")
+            raise TypeError(f"Input data to layer {func.__name__} need to be {Tensor.__class__}, is {type(x)}")
         return func(x, *args, **kwargs)
     return wrapper
