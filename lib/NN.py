@@ -45,7 +45,7 @@ class Layer(Module):
 
 
 class ReLU(Module): 
-    @force_tensor
+    @force_tensor(ismethod=True)
     def forward(self, x: Tensor) -> Tensor:
         self.input = x
         return x.max(Tensor(np.zeros_like(x.data)))
@@ -73,12 +73,12 @@ class Dense(Layer):
     def parameters(self) -> List[Tensor]:
         return [self.weights, self.biases]
 
-    @force_tensor
+    @force_tensor(ismethod=True)
     def forward(self, x: Tensor) -> Tensor:
         # force input to be a Tensor
-        if not isinstance(x, Tensor):
-            warnings.warn(f"Input data to layer {self.__class__.__name__} is not a Tensor. Converting to Tensor.")
-            x = Tensor(x, requires_grad=True)
+        # if not isinstance(x, Tensor):
+        #     warnings.warn(f"Input data to layer {self.__class__.__name__} is not a Tensor. Converting to Tensor.")
+        #     x = Tensor(x, requires_grad=True)
 
         input_features = x.shape[1] # input_dim
         if input_features != self.weights.shape[0]: # input_dim != weights.shape[0] - make sure the tensor matches the way the weights were initialized

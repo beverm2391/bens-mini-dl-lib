@@ -240,11 +240,21 @@ class Tensor:
         return f"Tensor({self.data}, requires_grad={self.requires_grad})"
 
 # ! Utility Functions =========================================================
-def force_tensor(func):
+def force_tensor(func, ismethod=False):
+
     @wraps(func)
-    def wrapper(x, *args, **kwargs):
+    def func_wrapper(x: Tensor, *args, **kwargs):
         if not isinstance(x, Tensor):
-            # warnings.warn(f"Input data to layer {func.__name__} is not a Tensor. Converting to Tensor.")
-            raise TypeError(f"Input data to layer {func.__name__} need to be {Tensor.__class__}, is {type(x)}")
+            raise TypeError(f"Input data to layer {func.__name__} need to be a Tensor, is {x.__class__.__name__}")
         return func(x, *args, **kwargs)
-    return wrapper
+    
+    @wraps(func)
+    def method_wrapper(self, x: Tensor, *args, **kwargs):
+        if not isinstance(x, Tensor):
+            raise TypeError(f"Input data to layer {func.__name__} need to be a Tensor, is {x.__class__.__name__}")
+        return func(self, x, *args, **kwargs)
+
+    if ismethod:
+        return method_wrapper 
+    else:
+        return func_wrapper
