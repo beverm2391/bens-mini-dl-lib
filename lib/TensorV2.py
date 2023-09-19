@@ -274,6 +274,22 @@ class Tensor:
 
         return out
     
+    def mean(self, axis=None):
+        """
+        Mean of the tensor along the given axis
+        """
+        out = np.mean(self.data, axis=axis)
+        out = Tensor(out, (self,), 'mean', requires_grad=self.requires_grad)
+
+        def _backward():
+            """
+            d/dx (mean(x)) = 1 / n
+            """
+            self.grad += (out.grad / self.data.size).reshape(self.data.shape)
+        out._backward = _backward
+
+        return out
+    
     # ! Activation Functions ===================================================
     def transpose(self):
         """
