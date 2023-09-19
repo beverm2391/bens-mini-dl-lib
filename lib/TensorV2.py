@@ -195,6 +195,52 @@ class Tensor:
     @make_tensor # ensure other is tensor (before we transpose it)
     def __rmatmul__(self, other): return self @ other.T
 
+    def __floordiv__(self): raise NotImplementedError(f"Operation not implemented")
+    def __mod__(self): raise NotImplementedError(f"Operation not implemented")
+
+    # handle in place (which will mess up the comutation graph) - so no backward methods needed
+    # THESE ARE UNTESTED.... use at your own risk
+    @make_tensor
+    def __iadd__(self, other: Tensor) -> Tensor:
+        warnings.warn(f"The operation {self.__iadd__.__name__} is untested. Use at your own risk.")
+        rg = self.requires_grad or other.requires_grad
+        if rg:
+            raise RuntimeError("In-place operations not supported for tensors with requires_grad=True")
+        self.data += other.data
+        return self
+    
+    @make_tensor
+    def __isub__(self, other: Tensor) -> Tensor:
+        warnings.warn(f"The operation {self.__iadd__.__name__} is untested. Use at your own risk.")
+        rg = self.requires_grad or other.requires_grad
+        if rg:
+            raise RuntimeError("In-place operations not supported for tensors with requires_grad=True")
+        self.data -= other.data
+        return self
+    
+    @make_tensor
+    def __imul__(self, other: Tensor) -> Tensor:
+        warnings.warn(f"The operation {self.__iadd__.__name__} is untested. Use at your own risk.")
+        rg = self.requires_grad or other.requires_grad
+        if rg:
+            raise RuntimeError("In-place operations not supported for tensors with requires_grad=True")
+        self.data *= other.data
+        return self
+    
+    @make_tensor
+    def __itruediv__(self, other: Tensor) -> Tensor:
+        warnings.warn(f"The operation {self.__iadd__.__name__} is untested. Use at your own risk.")
+        rg = self.requires_grad or other.requires_grad
+        if rg:
+            raise RuntimeError("In-place operations not supported for tensors with requires_grad=True")
+        self.data /= other.data
+        return self
+
+    # these will only be able to handle no grad tensors, like above
+    def __ifloordiv__(self, other): raise NotImplementedError(f"Operation not implemented")
+    def __imod__(self, other): raise NotImplementedError(f"Operation not implemented")
+    def __ipow__(self, other): raise NotImplementedError(f"Operation not implemented")
+
     # reduction ops
     def sum(self, axis=None):
         """

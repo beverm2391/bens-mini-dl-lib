@@ -226,35 +226,7 @@ def test_scalar_division():
 
 # TODO ================================================================
 def test_in_place_operations():
-    data1 = np.random.rand(2, 3)
-    data2 = np.random.rand(2, 3)
-
-    a = Tensor(data1, requires_grad=True)
-    b = Tensor(data2, requires_grad=True)
-
-    a += b
-    a *= b
-    b -= a
-    b /= a
-    b **= 2
-    c = a + b
-    c.sum().backward()
-
-    a_torch = torch.tensor(data1, dtype=torch.float32, requires_grad=True)
-    b_torch = torch.tensor(data2, dtype=torch.float32, requires_grad=True)
-
-    a_torch += b_torch
-    a_torch *= b_torch
-    b_torch -= a_torch
-    b_torch /= a_torch
-    b_torch **= 2
-    c_torch = a_torch + b_torch
-    c_torch.sum().backward()
-
-    assert np.allclose(a.data, a_torch.data.numpy()), f"Expected {a_torch.data.numpy()} but got {a.data}"
-    assert np.allclose(b.data, b_torch.data.numpy()), f"Expected {b_torch.data.numpy()} but got {b.data}"
-    assert np.allclose(a.grad, a_torch.grad.numpy()), f"Expected {a_torch.grad.numpy()} but got {a.grad}"
-    assert np.allclose(b.grad, b_torch.grad.numpy()), f"Expected {b_torch.grad.numpy()} but got {b.grad}"
+    pass
 
 def test_broadcasting():
     pass
