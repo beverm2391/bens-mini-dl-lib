@@ -1,5 +1,6 @@
 import numpy as np
 import torch
+import pytest
 
 from lib.TensorV2 import Tensor
 
@@ -113,6 +114,8 @@ def test_matrix_row_of_zeros():
 
     assert np.allclose(a.grad, a_torch.grad.numpy())
 
+# ! More Tests =========================================================
+
 def test_multiple():
     def _ops(a, b):
         c = a + b
@@ -163,7 +166,7 @@ def test_multiple_2():
         e = c * 2 # mul scalar
         x = d * e # mul tensor (elementwise)
         return x.sum()
-    
+
     data1 = np.random.rand(2, 3)
     data2 = np.random.rand(2, 3)
 
@@ -181,3 +184,25 @@ def test_multiple_2():
 
     assert np.allclose(a.grad, a_torch.grad.numpy()), f"Expected {a_torch.grad.numpy()} but got {a.grad}"
     assert np.allclose(b.grad, b_torch.grad.numpy()), f"Expected {b_torch.grad.numpy()} but got {b.grad}"
+
+# TODO ================================================================
+def test_scalar_division():
+    pass
+
+def test_in_place_operations():
+    pass
+
+def test_broadcasting():
+    pass
+
+def test_advanced_operations():
+    # exp, log, sin, cos, tan, etc.
+    pass
+
+def test_backward_with_non_unity_gradient():
+    # cases where the backward() method is called with a gradient other than the default (which is usually 1)
+    pass
+
+def test_invalid_shapes():
+    # with pytest.raises(ValueError):
+    pass
