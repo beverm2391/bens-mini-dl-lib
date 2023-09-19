@@ -82,6 +82,18 @@ class LeakyReLU(Module):
 
         return out
 
+# ! Loss Functions =======================================================
+
+class Loss(Module):
+    def forward(self, predictions: Tensor, labels: Tensor) -> Tensor: raise NotImplementedError
+
+class MSELoss(Loss):
+    def forward(self, x: Tensor, y: Tensor) -> Tensor:
+        self.input = (x, y)
+        diff = x - y
+        mse = (diff * diff).mean()
+        return mse
+
 # ! Layers ===============================================================
 
 class Layer(Module):

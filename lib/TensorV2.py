@@ -285,7 +285,7 @@ class Tensor:
             """
             d/dx (mean(x)) = 1 / n
             """
-            self.grad += (out.grad / self.data.size).reshape(self.data.shape)
+            self.grad += (np.ones_like(self.data) * out.grad / self.data.size).reshape(self.data.shape)
         out._backward = _backward
 
         return out
