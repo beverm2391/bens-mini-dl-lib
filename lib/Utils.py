@@ -69,7 +69,7 @@ class SyntheticData:
         Data containing outliers
         """
         np.random.seed(seed)
-        X, y = SynthecicData.linear(n)
+        X, y = SyntheticData.linear(n)
         if outliers > 0:
             X[:outliers] += 20 * np.random.randn(outliers, 1)
             y[:outliers] += 50 * np.random.randn(outliers, 1)

@@ -6,6 +6,7 @@ from typing import List
 
 from lib.TensorV2 import Tensor, force_tensor_method
 
+# ! BASE CLASSES =========================================================
 class Module:
     """
     Base class for all neural network modules.
@@ -31,6 +32,58 @@ class Module:
     def __call__(self, *args, **kwargs): return self.forward(*args, **kwargs)
 
 
+# ! Activation Functions ==================================================
+class ReLU(Module):
+    @force_tensor_method
+    def forward(self, x: Tensor) -> Tensor:
+        # Create a new Tensor that holds the result of the ReLU operation.
+        out_data = np.maximum(0, x.data)
+        out = Tensor(out_data, requires_grad=x.requires_grad)
+
+        def _backward():
+            x.grad += (out_data > 0) * out.grad  # gradient is passed through where input > 0
+        out._backward = _backward
+
+        return out
+
+class Sigmoid(Module):
+    def forward(self, x: Tensor) -> Tensor:
+        out_data = 1 / (1 + np.exp(-x.data))
+        out = Tensor(out_data, requires_grad=x.requires_grad)
+
+        def _backward():
+            x.grad += out_data * (1 - out_data) * out.grad
+        out._backward = _backward
+
+        return out
+
+class Tanh(Module):
+    def forward(self, x: Tensor) -> Tensor:
+        out_data = np.tanh(x.data)
+        out = Tensor(out_data, requires_grad=x.requires_grad)
+
+        def _backward():
+            x.grad += (1 - out_data ** 2) * out.grad
+        out._backward = _backward
+
+        return out
+
+class LeakyReLU(Module):
+    def __init__(self, alpha=0.01):
+        self.alpha = alpha
+
+    def forward(self, x: Tensor) -> Tensor:
+        out_data = np.where(x.data > 0, x.data, self.alpha * x.data)
+        out = Tensor(out_data, requires_grad=x.requires_grad)
+
+        def _backward():
+            x.grad += np.where(x.data > 0, 1, self.alpha) * out.grad
+        out._backward = _backward
+
+        return out
+
+# ! Layers ===============================================================
+
 class Layer(Module):
     def __init__(self):
         super().__init__() # init Module
@@ -43,17 +96,6 @@ class Layer(Module):
     
     def __call__(self, *args, **kwargs):
         return self.forward(*args, **kwargs)
-
-
-class ReLU(Module): 
-    @force_tensor_method
-    def forward(self, x: Tensor) -> Tensor:
-        self.input = x
-        return x.max(Tensor(np.zeros_like(x.data)))
-
-    def backward(self, output_grad):
-        return (self.input > 0) * output_grad
-
 
 class Dense(Layer):
     def __init__(self, input_dim: int, output_dim: int):
