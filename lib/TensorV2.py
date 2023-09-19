@@ -129,10 +129,10 @@ class Tensor:
                 return x.size == 1 or np.isscalar(x) or x.ndim == 0 or x.shape == ()
             
             # ? debug broadcasting issues
-            # print(f"Self data shape: {self.data.shape}")
-            # print(f"Other data shape: {other.data.shape}")
-            # print(f"Self grad shape: {self.grad.shape}")
-            # print(f"Out grad shape: {out.grad.shape}")
+            print(f"Self data shape: {self.data.shape}")
+            print(f"Other data shape: {other.data.shape}")
+            print(f"Self grad shape: {self.grad.shape}")
+            print(f"Out grad shape: {out.grad.shape}")
 
             if _qscalar(self.data):
                 self.grad += np.sum(other.data * out.grad) # must sum to multiply correctly (if self.data is a scalar)

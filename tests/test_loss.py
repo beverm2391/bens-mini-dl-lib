@@ -27,7 +27,7 @@ def test_MSE():
     assert np.allclose(x.grad, x_torch.grad.numpy()), f"x.grad: {x.grad}\nx_torch.grad: {x_torch.grad.numpy()}"
     assert np.allclose(y.grad, y_torch.grad.numpy()), f"y.grad: {y.grad}\ny_torch.grad: {y_torch.grad.numpy()}"
 
-def BYPASStest_CrossEntropyLoss():
+def test_CrossEntropyLoss():
     x_data = np.array([0.1, 0.8, 0.4, 0.6])
     y_data = np.array([0, 1, 0, 1])
 
