@@ -4,7 +4,7 @@ import numpy as np
 import warnings
 from typing import List
 
-from lib.TensorV2 import Tensor, force_tensor
+from lib.TensorV2 import Tensor, force_tensor_method
 
 class Module:
     """
@@ -26,8 +26,9 @@ class Module:
             for p in module.parameters():
                 p.zero_grad()
 
-    def parameters(self):
-        return []
+    def parameters(self): return []
+    def forward(self, *args, **kwargs): raise NotImplementedError
+    def __call__(self, *args, **kwargs): return self.forward(*args, **kwargs)
 
 
 class Layer(Module):
@@ -45,7 +46,7 @@ class Layer(Module):
 
 
 class ReLU(Module): 
-    @force_tensor(ismethod=True)
+    @force_tensor_method
     def forward(self, x: Tensor) -> Tensor:
         self.input = x
         return x.max(Tensor(np.zeros_like(x.data)))
@@ -73,7 +74,7 @@ class Dense(Layer):
     def parameters(self) -> List[Tensor]:
         return [self.weights, self.biases]
 
-    @force_tensor(ismethod=True)
+    @force_tensor_method
     def forward(self, x: Tensor) -> Tensor:
         # force input to be a Tensor
         # if not isinstance(x, Tensor):

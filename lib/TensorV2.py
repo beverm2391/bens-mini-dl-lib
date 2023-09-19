@@ -11,6 +11,8 @@ class Tensor:
     """
     def __init__(self, data: Union[int, float, list, np.ndarray], children=(), op='', requires_grad: bool = False, axis=None):
         self.data = self._process_data(data)
+        self.shape = self.data.shape
+        self.dtype = self.data.dtype
         self.grad = None
         self.requires_grad = requires_grad
         if self.requires_grad:
@@ -240,21 +242,28 @@ class Tensor:
         return f"Tensor({self.data}, requires_grad={self.requires_grad})"
 
 # ! Utility Functions =========================================================
-def force_tensor(func, ismethod=False):
-
+def force_tensor_func(func):
+    """
+    Test if the first argument is a Tensor, and if not, throw an error
+    Used for functions that take a Tensor as the first argument
+    """
     @wraps(func)
-    def func_wrapper(x: Tensor, *args, **kwargs):
+    def wrapper(x: Tensor, *args, **kwargs):
         if not isinstance(x, Tensor):
+            # warnings.warn(f"Input data to layer {func.__name__} is not a Tensor. Converting to Tensor.")
             raise TypeError(f"Input data to layer {func.__name__} need to be a Tensor, is {x.__class__.__name__}")
         return func(x, *args, **kwargs)
-    
-    @wraps(func)
-    def method_wrapper(self, x: Tensor, *args, **kwargs):
-        if not isinstance(x, Tensor):
-            raise TypeError(f"Input data to layer {func.__name__} need to be a Tensor, is {x.__class__.__name__}")
-        return func(self, x, *args, **kwargs)
+    return wrapper
 
-    if ismethod:
-        return method_wrapper 
-    else:
-        return func_wrapper
+
+def force_tensor_method(method):
+    """
+    Test if the second argument is a Tensor, and if not, throw an error.
+    Used for class methods that take self as the first argument and a Tensor as the second argument
+    """
+    @wraps(method)
+    def wrapper(self, x: Tensor, *args, **kwargs):
+        if not isinstance(x, Tensor):
+            raise TypeError(f"Input data to layer {method.__name__} need to be a Tensor, is {x.__class__.__name__}")
+        return method(self, x, *args, **kwargs)
+    return wrapper
