@@ -3,19 +3,8 @@ from __future__ import annotations # for type hinting
 import numpy as np
 import warnings
 from typing import List
-from functools import wraps
 
-from lib.TensorV2 import Tensor
-
-def force_tensor(func):
-    @wraps(func)
-    def wrapper(x, *args, **kwargs):
-        if not isinstance(x, Tensor):
-            # warnings.warn(f"Input data to layer {func.__name__} is not a Tensor. Converting to Tensor.")
-            raise TypeError(f"Input data to layer {func.__name__} need to be a tensor.")
-        return func(x, *args, **kwargs)
-    return wrapper
-
+from lib.TensorV2 import Tensor, force_tensor
 
 class Module:
     """
@@ -47,16 +36,12 @@ class Layer(Module):
 
     def forward(self, x: Tensor) -> Tensor:
         """
-        Compute the output of this layer using `x`.
+        Forward pass of the layer
         """
-
         raise NotImplementedError
-
-    def __call__(self, x: Tensor) -> Tensor:
-        """
-        A convenient way to chain operations.
-        """
-        return self.forward(x)
+    
+    def __call__(self, *args, **kwargs):
+        return self.forward(*args, **kwargs)
 
 
 class ReLU(Module): 
@@ -87,7 +72,7 @@ class Dense(Layer):
     
     def parameters(self) -> List[Tensor]:
         return [self.weights, self.biases]
-    
+
     @force_tensor
     def forward(self, x: Tensor) -> Tensor:
         # force input to be a Tensor
@@ -101,32 +86,3 @@ class Dense(Layer):
 
         #? not sure if i need to handle the case where batch_size = 1, and x is a vector
         return x @ self.weights + self.biases # matrix multiplication
-
-
-class MLP(Module):
-    def __init__(self, input_dim: int, hidden_dim_1: int, hidden_dim_2: int, output_dim: int):
-        super().__init__() # init Module
-
-        self.add_module("dense1", Dense(input_dim, hidden_dim_1))
-        self.add_module("relu1", ReLU())
-        self.add_module("dense2", Dense(hidden_dim_1, hidden_dim_2))
-        self.add_module("relu2", ReLU())
-        self.add_module("dense3", Dense(hidden_dim_2, output_dim))
-
-    @force_tensor
-    def forward(self, x: Tensor) -> Tensor:
-        # first dense layer
-        x = self.get_module("dense1")(x)
-        x = self.get_module("relu1")(x)
-
-        # second dense layer
-        x = self.get_module("dense2")(x)
-        x = self.get_module("relu2")(x)
-
-        # third dense layer
-        x = self.get_module("dense3")(x)
-
-        return x
-
-    def parameters(self) -> List[Tensor]:
-        return [p for module in self._modules.values() for p in module.parameters()]

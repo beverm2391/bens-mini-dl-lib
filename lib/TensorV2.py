@@ -236,3 +236,13 @@ class Tensor:
 
     def __repr__(self):
         return f"Tensor({self.data}, requires_grad={self.requires_grad})"
+
+# ! Utility Functions =========================================================
+def force_tensor(func):
+    @wraps(func)
+    def wrapper(x, *args, **kwargs):
+        if not isinstance(x, Tensor):
+            # warnings.warn(f"Input data to layer {func.__name__} is not a Tensor. Converting to Tensor.")
+            raise TypeError(f"Input data to layer {func.__name__} need to be a tensor.")
+        return func(x, *args, **kwargs)
+    return wrapper
