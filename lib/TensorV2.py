@@ -11,8 +11,10 @@ class Tensor:
     """
     def __init__(self, data: Union[int, float, list, np.ndarray], children=(), op='', requires_grad: bool = False, axis=None):
         self.data = self._process_data(data)
-        self.grad = self.zero_grad()
+        self.grad = None
         self.requires_grad = requires_grad
+        if self.requires_grad:
+            self.zero_grad()
         self._backward = lambda: None
         self._prev = set(children)
         self._op = op
@@ -39,10 +41,7 @@ class Tensor:
             return np.array(data)
 
     def zero_grad(self):
-        """
-        Zero out the gradient
-        """
-        self.grad = np.zeros_like(self.data)
+        self.grad = np.zeros_like(self.data, dtype=np.float64) # force float64 to avoid broadcasting issues down the line
 
     def make_tensor(func) -> Tensor:
         """
@@ -52,6 +51,17 @@ class Tensor:
         def wrapper(self, other):
             if not isinstance(other, Tensor):
                 other = Tensor(other, requires_grad=self.requires_grad)
+            return func(self, other)
+        return wrapper
+    
+    def no_scalars(func):
+        """
+        Decorator to ensure that the function is not called on a scalar
+        """
+        @wraps(func)
+        def wrapper(self, other):
+            if np.isscalar(other):
+                raise TypeError(f"Cannot call {func.__name__} on a scalar")
             return func(self, other)
         return wrapper
 
@@ -83,7 +93,7 @@ class Tensor:
 
     # ! Main Ops ==============================================================
     @make_tensor
-    def __add___(self, other: Tensor) -> Tensor:
+    def __add__(self, other: Tensor) -> Tensor:
         """
         Add two tensors
         """
@@ -112,8 +122,26 @@ class Tensor:
             d/dx (x * y) = y
             d/dy (x * y) = x
             """
-            self.grad += (other.data * out.grad).reshape(self.data.shape) # must reshape to broadcast correctly
-            other.grad += (self.data * out.grad).reshape(other.data.shape) # must reshape to broadcast correctly
+            def _qscalar(x):
+                """Quasi-scalar: a scalar or a 1-element array"""
+                return x.size == 1 or np.isscalar(x) or x.ndim == 0 or x.shape == ()
+            
+            # ? debug broadcasting issues
+            # print(f"Self data shape: {self.data.shape}")
+            # print(f"Other data shape: {other.data.shape}")
+            # print(f"Self grad shape: {self.grad.shape}")
+            # print(f"Out grad shape: {out.grad.shape}")
+
+            if _qscalar(self.data):
+                self.grad += np.sum(other.data * out.grad) # must sum to multiply correctly (if self.data is a scalar)
+            else:
+                self.grad += (other.data * out.grad).reshape(self.data.shape) # must reshape to broadcast correctly
+
+            if _qscalar(other.data):
+                other.grad += np.sum(self.data * out.grad) # must sum to  multiply correctly (if other.data is a scalar)
+            else:
+                other.grad += (self.data * out.grad).reshape(other.data.shape) # must reshape to broadcast correctly
+
         out._backward = _backward
 
         return out
@@ -134,6 +162,7 @@ class Tensor:
 
         return out
 
+    @no_scalars
     @make_tensor
     def __matmul__(self, other: Tensor) -> Tensor:
         """
@@ -198,3 +227,12 @@ class Tensor:
 
     @property
     def T(self): return self.transpose()
+    def __hash__(self): return id(self) # so we can add Tensors to set in backward()
+
+    def __eq__(self, other: Tensor) -> bool:
+        if not isinstance(other, Tensor):
+            raise NotImplementedError("Cannot compare Tensor to non-Tensor")
+        return np.array_equal(self.data, other.data)
+
+    def __repr__(self):
+        return f"Tensor({self.data}, requires_grad={self.requires_grad})"
