@@ -16,17 +16,17 @@ This adds a .pth file to the site-packages directory containing the project's ro
 - [X] Add optimizers
 - [X] Add checks for numerical instability
 - [X] Finish replicating/reverse engineering Karpathy's [micrograd](https://github.com/karpathy/micrograd)
--  [X] make a nn module that mirrors micrograd but with my logic
-  
+- [X] make a nn module that mirrors micrograd but with my logic
+- [X] update my backward method to use Top sort?
+- [X] make a test suite that mirrors micrograd/write sanity checks for Tensor class
+  - [X] figure out why certain operation chains are failing and others aren't
+
+
 ## TODO
-- [ ] update my backward method to use Top sort?
-- [ ] make a test suite that mirrors micrograd/write sanity checks for Tensor class
-  - [ ] figure out why certain operation chains are failing and others aren't
-- [ ] Figure out where activation functions will go with my current abstractions
-  - [ ] they will need backprop methods
-  - [ ] test dense layer with activation functions
-- [ ] Add a network class
+- [ ] Update nn to use new tensor class
+- [ ] Clean up unused code in lib
 - [ ] Add a training loop
+- [ ] Test the MLP on a simple dataset
 - [ ] Add data handling
 - [ ] Add evaluation
 - [ ] Add dynamic lr optimizer
