@@ -212,6 +212,22 @@ class Tensor:
 
         return out
     
+    def max(self, axis=None):
+        """
+        Max of the tensor along the given axis
+        """
+        out = np.max(self.data, axis=axis)
+        out = Tensor(out, (self,), 'max', requires_grad=self.requires_grad)
+
+        def _backward():
+            """
+            d/dx (max(x)) = 1 if x is the max, 0 otherwise
+            """
+            self.grad += np.where(self.data == out.data, out.grad, 0)
+        out._backward = _backward
+
+        return out
+    
     # ! Activation Functions ===================================================
     def transpose(self):
         """
