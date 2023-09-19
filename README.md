@@ -20,10 +20,14 @@ This adds a .pth file to the site-packages directory containing the project's ro
 - [X] update my backward method to use Top sort?
 - [X] make a test suite that mirrors micrograd/write sanity checks for Tensor class
   - [X] figure out why certain operation chains are failing and others aren't
-
+- [X] Update nn to use new tensor class
+- [X] Add activation functions with tests
 
 ## TODO
-- [ ] Update nn to use new tensor class
+- [ ] Test log
+- [ ] Test exp
+- [ ] Test clip
+- [ ] Get CE loss test passing
 - [ ] Clean up unused code in lib
 - [ ] Add a training loop
 - [ ] Test the MLP on a simple dataset
@@ -35,11 +39,3 @@ This adds a .pth file to the site-packages directory containing the project's ro
 - [ ] Look into [this](https://vmartin.fr/automatic-jacobian-matrix-computation-with-sympy.html) jacobian matrix optimization
 
 ## Backlog
-- [ ] Finish Tensor tests
-  - [X] Basic ops
-  - [ ] Reduction ops
-  - [ ] Shape
-  - [ ] Indexing
-  - [ ] Utility
-  - [ ] Other
-  - [ ] Auto diff
