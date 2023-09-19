@@ -94,6 +94,14 @@ class MSELoss(Loss):
         mse = (diff * diff).mean()
         return mse
 
+class CrossEntropyLoss(Loss):
+    def forward(self, x: Tensor, y: Tensor) -> Tensor:
+        self.input = (x, y)
+        epsilon = 1e-12
+        x_clipped = x.clip(epsilon, 1. - epsilon)
+        ce = - (y * x_clipped.log() + (1. - y) * (1. - x_clipped).log()).mean()
+        return ce
+
 # ! Layers ===============================================================
 
 class Layer(Module):

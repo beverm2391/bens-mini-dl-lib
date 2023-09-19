@@ -241,6 +241,9 @@ class Tensor:
     def __imod__(self, other): raise NotImplementedError(f"Operation not implemented")
     def __ipow__(self, other): raise NotImplementedError(f"Operation not implemented")
 
+    def log(self): return NotImplementedError
+    def exp(self): return NotImplementedError
+
     # reduction ops
     def sum(self, axis=None):
         """
@@ -289,8 +292,9 @@ class Tensor:
         out._backward = _backward
 
         return out
-    
-    # ! Activation Functions ===================================================
+
+    def clip(self, min, max): raise NotImplementedError
+
     def transpose(self):
         """
         Transpose the tensor
