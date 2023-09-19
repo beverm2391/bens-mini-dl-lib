@@ -230,7 +230,7 @@ def test_log():
 
     a = Tensor(data, requires_grad=True)
     log_a = a.log()
-    log_a.backward()
+    log_a.sum().backward()
 
     a_torch = torch.tensor(data, dtype=torch.float32, requires_grad=True)
     log_a_torch = torch.log(a_torch)
@@ -239,12 +239,12 @@ def test_log():
     assert np.allclose(log_a.data, log_a_torch.data.numpy()), f"Expected {log_a_torch.data.numpy()} but got {log_a.data}"
     assert np.allclose(a.grad, a_torch.grad.numpy()), f"Expected {a_torch.grad.numpy()} but got {a.grad}"
 
-def BYPASStest_exp():
+def test_exp():
     data = np.random.rand(2, 3)
 
     a = Tensor(data, requires_grad=True)
     exp_a = a.exp()
-    exp_a.backward()
+    exp_a.sum().backward()
 
     a_torch = torch.tensor(data, dtype=torch.float32, requires_grad=True)
     exp_a_torch = torch.exp(a_torch)
@@ -254,8 +254,19 @@ def BYPASStest_exp():
     assert np.allclose(a.grad, a_torch.grad.numpy()), f"Expected {a_torch.grad.numpy()} but got {a.grad}"
 
 
-def test_clip():
-    pass
+def BYPASStest_clip():
+    data = np.random.rand(2, 3) * 10
+
+    a = Tensor(data, requires_grad=True)
+    a = a.clip(2, 8)
+    a.sum().backward()
+
+    a_torch = torch.tensor(data, dtype=torch.float32, requires_grad=True)
+    a_torch = torch.clip(a_torch, 2, 8)
+    a_torch.sum().backward()
+
+    assert np.allclose(a.data, a_torch.data.numpy()), f"Expected {a_torch.data.numpy()} but got {a.data}"
+    assert np.allclose(a.grad, a_torch.grad.numpy()), f"Expected {a_torch.grad.numpy()} but got {a.grad}"
 
 # TODO ================================================================
 def test_in_place_operations():

@@ -22,11 +22,11 @@ This adds a .pth file to the site-packages directory containing the project's ro
   - [X] figure out why certain operation chains are failing and others aren't
 - [X] Update nn to use new tensor class
 - [X] Add activation functions with tests
-
+- [X] Test log
+- [X] Test exp
+- [X] Test clip
+  
 ## TODO
-- [ ] Test log
-- [ ] Test exp
-- [ ] Test clip
 - [ ] Get CE loss test passing
 - [ ] Clean up unused code in lib
 - [ ] Add a training loop
