@@ -1,6 +1,6 @@
 import numpy as np
 
-class SynthecicData:
+class SyntheticData:
     @staticmethod
     def linear(n: int, range: tuple = (-10, 10), noise: float = 5, seed: int = 0):
         """

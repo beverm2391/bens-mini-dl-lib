@@ -5,7 +5,7 @@ import warnings
 from typing import List
 from functools import wraps
 
-from lib.Tensor import Tensor
+from lib.TensorV2 import Tensor
 
 def force_tensor(func):
     @wraps(func)
