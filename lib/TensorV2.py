@@ -66,6 +66,10 @@ class Tensor:
                 raise TypeError(f"Cannot call {func.__name__} on a scalar")
             return func(self, other)
         return wrapper
+    
+    def _qscalar(self, x):
+        """Quasi-scalar: a scalar or a 1-element array"""
+        return x.size == 1 or np.isscalar(x) or x.ndim == 0 or x.shape == ()
 
     # ! Backprop ==============================================================
     def backward(self):
@@ -104,8 +108,22 @@ class Tensor:
         out = Tensor(out, (self, other), 'add', requires_grad=rg)
 
         def _backward():
-            self.grad += out.grad.reshape(self.data.shape) # must reshape to broadcast correctly
-            other.grad += out.grad.reshape(other.data.shape) # must reshape to broadcast correctly
+            # ? debug broadcasting issues
+            # print(f"Self data shape: {self.data.shape}")
+            # print(f"Other data shape: {other.data.shape}")
+            # print(f"Self grad shape: {self.grad.shape}")
+            # print(f"Out grad shape: {out.grad.shape}")
+
+            if self._qscalar(self.data):
+                self.grad += np.sum(out.grad) # must sum to add correctly (if self.data is a scalar)
+            else:
+                self.grad += out.grad.reshape(self.data.shape)
+
+            if self._qscalar(other.data):
+                other.grad += np.sum(out.grad) # must sum to add correctly (if other.data is a scalar)
+            else:
+                other.grad += out.grad.reshape(other.data.shape)
+
         out._backward = _backward
 
         return out
@@ -124,22 +142,18 @@ class Tensor:
             d/dx (x * y) = y
             d/dy (x * y) = x
             """
-            def _qscalar(x):
-                """Quasi-scalar: a scalar or a 1-element array"""
-                return x.size == 1 or np.isscalar(x) or x.ndim == 0 or x.shape == ()
-            
             # ? debug broadcasting issues
-            print(f"Self data shape: {self.data.shape}")
-            print(f"Other data shape: {other.data.shape}")
-            print(f"Self grad shape: {self.grad.shape}")
-            print(f"Out grad shape: {out.grad.shape}")
+            # print(f"Self data shape: {self.data.shape}")
+            # print(f"Other data shape: {other.data.shape}")
+            # print(f"Self grad shape: {self.grad.shape}")
+            # print(f"Out grad shape: {out.grad.shape}")
 
-            if _qscalar(self.data):
+            if self._qscalar(self.data):
                 self.grad += np.sum(other.data * out.grad) # must sum to multiply correctly (if self.data is a scalar)
             else:
                 self.grad += (other.data * out.grad).reshape(self.data.shape) # must reshape to broadcast correctly
 
-            if _qscalar(other.data):
+            if self._qscalar(other.data):
                 other.grad += np.sum(self.data * out.grad) # must sum to  multiply correctly (if other.data is a scalar)
             else:
                 other.grad += (self.data * out.grad).reshape(other.data.shape) # must reshape to broadcast correctly
