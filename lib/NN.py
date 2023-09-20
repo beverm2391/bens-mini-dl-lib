@@ -98,8 +98,8 @@ class CrossEntropyLoss(Loss):
     def forward(self, x: Tensor, y: Tensor) -> Tensor:
         self.input = (x, y)
         epsilon = 1e-12
-        x_clipped = x.clip(epsilon, 1. - epsilon)
-        ce = - (y * x_clipped.log() + (1. - y) * (1. - x_clipped).log()).mean()
+        x_clipped = x.clip(epsilon, 1. - epsilon) # clip to avoid log(0)
+        ce = - (y * x_clipped.log() + (1. - y) * (1. - x_clipped).log()).mean() # cross entropy
         return ce
 
 # ! Layers ===============================================================
@@ -138,11 +138,6 @@ class Dense(Layer):
 
     @force_tensor_method
     def forward(self, x: Tensor) -> Tensor:
-        # force input to be a Tensor
-        # if not isinstance(x, Tensor):
-        #     warnings.warn(f"Input data to layer {self.__class__.__name__} is not a Tensor. Converting to Tensor.")
-        #     x = Tensor(x, requires_grad=True)
-
         input_features = x.shape[1] # input_dim
         if input_features != self.weights.shape[0]: # input_dim != weights.shape[0] - make sure the tensor matches the way the weights were initialized
             raise RuntimeError(f"Input tensor with {input_features} features should match layer input dim {self.weights.shape[0]}")
