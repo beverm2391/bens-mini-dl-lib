@@ -3,6 +3,7 @@ from __future__ import annotations # for type hinting
 import numpy as np
 import warnings
 from typing import List
+from abc import ABC, abstractmethod
 
 from lib.TensorV2 import Tensor, force_tensor_method
 
@@ -29,6 +30,34 @@ class Module:
 
     def parameters(self): return []
     def forward(self, *args, **kwargs): raise NotImplementedError
+    def __call__(self, *args, **kwargs): return self.forward(*args, **kwargs)
+
+
+class ModuleAbstract(ABC):
+    """
+    Abstract base class for all neural network modules.
+    """
+    def __init__(self):
+        self._modules = {} # dictionary of sub-modules
+
+    def add_module(self, name: str, module: Module):
+        """Add a sub-module to the current module."""
+        self._modules[name] = module
+
+    def get_module(self, name: str):
+        """Retrieve a sub-module by name."""
+        return self._modules.get(name, None)
+    
+    def zero_grad(self):
+        for module in self._modules.values():
+            for p in module.parameters():
+                p.zero_grad()
+    
+    @abstractmethod
+    def parameters(self): return []
+    @abstractmethod
+    def forward(self, *args, **kwargs): raise NotImplementedError
+    @abstractmethod
     def __call__(self, *args, **kwargs): return self.forward(*args, **kwargs)
 
 
