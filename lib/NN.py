@@ -33,34 +33,6 @@ class Module:
     def __call__(self, *args, **kwargs): return self.forward(*args, **kwargs)
 
 
-class ModuleAbstract(ABC):
-    """
-    Abstract base class for all neural network modules.
-    """
-    def __init__(self):
-        self._modules = {} # dictionary of sub-modules
-
-    def add_module(self, name: str, module: Module):
-        """Add a sub-module to the current module."""
-        self._modules[name] = module
-
-    def get_module(self, name: str):
-        """Retrieve a sub-module by name."""
-        return self._modules.get(name, None)
-    
-    def zero_grad(self):
-        for module in self._modules.values():
-            for p in module.parameters():
-                p.zero_grad()
-    
-    @abstractmethod
-    def parameters(self): return []
-    @abstractmethod
-    def forward(self, *args, **kwargs): raise NotImplementedError
-    @abstractmethod
-    def __call__(self, *args, **kwargs): return self.forward(*args, **kwargs)
-
-
 # ! Activation Functions ==================================================
 class ReLU(Module):
     @force_tensor_method
