@@ -143,4 +143,7 @@ class Dense(Layer):
             raise RuntimeError(f"Input tensor with {input_features} features should match layer input dim {self.weights.shape[0]}")
 
         #? not sure if i need to handle the case where batch_size = 1, and x is a vector
-        return x @ self.weights + self.biases # matrix multiplication
+        # xW or Wx? any transposition?
+        # https://stackoverflow.com/questions/63006388/should-i-transpose-features-or-weights-in-neural-network
+        # "Should I transpose features or weights in Neural network?" - in torch convention, you should transpose weights, but use matmul with the features first.
+        return x @ self.weights.T + self.biases # matrix multiplication
