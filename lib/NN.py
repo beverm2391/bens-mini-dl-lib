@@ -23,6 +23,10 @@ class Module:
     def get_module(self, name: str):
         """Retrieve a sub-module by name."""
         return self._modules.get(name, None)
+    
+    def list_modules(self) -> List[str]:
+        """List all sub-modules."""
+        return list(self._modules.keys())
 
     def zero_grad(self):
         for module in self._modules.values():
@@ -174,3 +178,21 @@ class Dropout(Layer):
 
     def parameters(self) -> List[Tensor]:
         return []  # Dropout has no learnable parameters
+
+
+# ! Models ===============================================================
+
+class MLP(Module):
+    def __init__(self, layer_dims: List[int], activation_fn=ReLU) -> None:
+        super().__init__()
+
+        for i in range(len(layer_dims) - 1):
+            self.add_module(f"dense_{i}", Dense(layer_dims[i], layer_dims[i+1]))
+            if i < len(layer_dims) - 2:
+                self.add_module(f"activation_{i}", activation_fn())
+
+    @force_tensor_method
+    def forward(self, x: Tensor) -> Tensor:
+        for name, module in self._modules.items():
+            x = module(x)
+        return x
