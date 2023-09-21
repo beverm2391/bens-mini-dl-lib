@@ -3,7 +3,6 @@ from __future__ import annotations # for type hinting
 import numpy as np
 import warnings
 from typing import List
-from abc import ABC, abstractmethod
 
 from lib.TensorV2 import Tensor, force_tensor_method
 

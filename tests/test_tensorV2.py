@@ -253,7 +253,35 @@ def test_exp():
     assert np.allclose(exp_a.data, exp_a_torch.data.numpy()), f"Expected {exp_a_torch.data.numpy()} but got {exp_a.data}"
     assert np.allclose(a.grad, a_torch.grad.numpy()), f"Expected {a_torch.grad.numpy()} but got {a.grad}"
 
+# ! Static method tests ==================================================
+def test_zeros():
+    shape = (2, 3)
+    tensor = Tensor.zeros(shape)
+    assert tensor.data.shape == shape
+    assert np.all(tensor.data == 0)
 
+def test_ones():
+    shape = (3, 3)
+    tensor = Tensor.ones(shape)
+    assert tensor.data.shape == shape
+    assert np.all(tensor.data == 1)
+
+def test_randn():
+    shape = (4, 4)
+    tensor = Tensor.randn(shape)
+    assert tensor.data.shape == shape
+    # Cannot assert the values since they are random, but can check type
+    assert tensor.data.dtype == np.float64
+
+def test_rand():
+    shape = (2, 2)
+    tensor = Tensor.rand(shape)
+    assert tensor.data.shape == shape
+    # Values should be between 0 and 1
+    assert np.all(tensor.data >= 0)
+    assert np.all(tensor.data <= 1)
+
+# TODO ================================================================
 def BYPASStest_clip():
     data = np.random.rand(2, 3) * 10
 
@@ -268,7 +296,7 @@ def BYPASStest_clip():
     assert np.allclose(a.data, a_torch.data.numpy()), f"Expected {a_torch.data.numpy()} but got {a.data}"
     assert np.allclose(a.grad, a_torch.grad.numpy()), f"Expected {a_torch.grad.numpy()} but got {a.grad}"
 
-# TODO ================================================================
+
 def test_in_place_operations():
     pass
 

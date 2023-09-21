@@ -367,6 +367,22 @@ class Tensor:
 
         return out
 
+    @staticmethod
+    def zeros(shape):
+        return Tensor(np.zeros(shape))
+    
+    @staticmethod
+    def ones(shape):
+        return Tensor(np.ones(shape))
+    
+    @staticmethod
+    def randn(shape):
+        return Tensor(np.random.randn(*shape))
+    
+    @staticmethod
+    def rand(shape):
+        return Tensor(np.random.rand(*shape))
+
     @property
     def T(self): return self.transpose()
     def __hash__(self): return id(self) # so we can add Tensors to set in backward()
