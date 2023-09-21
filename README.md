@@ -27,10 +27,12 @@ This adds a .pth file to the site-packages directory containing the project's ro
 - [X] Test clip
   
 ## TODO
+- [ ] make sure my test tolerance isn't too high
+- [ ] Test the MLP on a simple dataset, get it converging
+- [ ] make a sequential model class like pytorch
 - [ ] Get CE loss test passing
 - [ ] Clean up unused code in lib
 - [ ] Add a training loop
-- [ ] Test the MLP on a simple dataset
 - [ ] Add data handling
 - [ ] Add evaluation
 - [ ] Add dynamic lr optimizer
