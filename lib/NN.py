@@ -131,3 +131,35 @@ class Dense(Layer):
     
     def parameters(self) -> List[Tensor]:
         return [self.weights, self.biases]
+
+
+class BatchNorm(Layer):
+    def __init__(self, num_features):
+        super().__init__()
+        self.gamma = Tensor.ones(num_features)
+        self.beta = Tensor.zeros(num_features)
+        self.eps = 1e-5
+
+    def forward(self, inputs: Tensor) -> Tensor:
+        mean = np.mean(inputs.data, axis=0)
+        var = np.var(inputs.data, axis=0)
+        normalized = (inputs.data - mean) / np.sqrt(var + self.eps)
+        out = self.gamma.data * normalized + self.beta.data
+        return Tensor(out)
+
+    def parameters(self) -> List[Tensor]:
+        return [self.gamma, self.beta]
+
+
+class Dropout(Layer):
+    def __init__(self, p: float = 0.5):
+        super().__init__()
+        self.p = p
+
+    def forward(self, inputs: Tensor) -> Tensor:
+        mask = np.random.binomial(1, 1 - self.p, size=inputs.data.shape)
+        out = inputs.data * mask / (1 - self.p)
+        return Tensor(out)
+
+    def parameters(self) -> List[Tensor]:
+        return []  # Dropout has no learnable parameters
