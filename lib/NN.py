@@ -2,7 +2,7 @@ from __future__ import annotations # for type hinting
 
 import numpy as np
 import warnings
-from typing import List
+from typing import List, Any
 
 from lib.TensorV2 import Tensor, force_tensor_method
 
@@ -16,6 +16,8 @@ class Module:
 
     def add_module(self, name: str, module: Module):
         """Add a sub-module to the current module."""
+        if name in self._modules:
+            raise ValueError(f"Module {name} already exists.")
         self._modules[name] = module
     
     def get_module(self, name: str):
@@ -27,7 +29,12 @@ class Module:
             for p in module.parameters():
                 p.zero_grad()
 
-    def parameters(self): return []
+    def parameters(self) -> List[Any]:
+        params = []
+        for module in self._modules.values():
+            params.extend(module.parameters())
+        return params
+    
     def forward(self, *args, **kwargs): raise NotImplementedError
     def __call__(self, *args, **kwargs): return self.forward(*args, **kwargs)
 
