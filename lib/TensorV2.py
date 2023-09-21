@@ -123,6 +123,7 @@ class Tensor:
                 other.grad += np.sum(out.grad) # must sum to add correctly (if other.data is a scalar)
             else:
                 other.grad += out.grad.reshape(other.data.shape)
+                # other.grad += np.ones_like(other.data) * out.grad
 
         out._backward = _backward
 
