@@ -140,6 +140,8 @@ class BatchNorm(Layer):
         self.beta = Tensor.zeros(num_features)
         self.eps = 1e-5
 
+        warnings.warn("BatchNorm layer is technically tested but not yet fully implemented. Use at your own risk.")
+
     def forward(self, inputs: Tensor) -> Tensor:
         mean = np.mean(inputs.data, axis=0)
         var = np.var(inputs.data, axis=0)
@@ -155,6 +157,8 @@ class Dropout(Layer):
     def __init__(self, p: float = 0.5):
         super().__init__()
         self.p = p
+
+        warnings.warn("Dropout layer is technically tested but not yet fully implemented. Use at your own risk.")
 
     def forward(self, inputs: Tensor) -> Tensor:
         mask = np.random.binomial(1, 1 - self.p, size=inputs.data.shape)
