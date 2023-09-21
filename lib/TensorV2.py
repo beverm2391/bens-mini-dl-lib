@@ -368,20 +368,20 @@ class Tensor:
         return out
 
     @staticmethod
-    def zeros(shape):
-        return Tensor(np.zeros(shape))
+    def zeros(shape, **kwargs):
+        return Tensor(np.zeros(shape), **kwargs)
     
     @staticmethod
-    def ones(shape):
-        return Tensor(np.ones(shape))
+    def ones(shape, **kwargs):
+        return Tensor(np.ones(shape), **kwargs)
     
     @staticmethod
-    def randn(*shape):
-        return Tensor(np.random.randn(*shape))
+    def randn(*shape, **kwargs):
+        return Tensor(np.random.randn(*shape), **kwargs)
     
     @staticmethod
-    def rand(*shape):
-        return Tensor(np.random.rand(*shape))
+    def rand(*shape, **kwargs):
+        return Tensor(np.random.rand(*shape), **kwargs)
 
     @property
     def T(self): return self.transpose()
