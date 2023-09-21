@@ -27,6 +27,7 @@ This adds a .pth file to the site-packages directory containing the project's ro
 - [X] Test clip
   
 ## TODO
+- [ ] fix tensor backward __add__ method
 - [ ] make sure my test tolerance isn't too high
 - [ ] Test the MLP on a simple dataset, get it converging
 - [ ] make a sequential model class like pytorch

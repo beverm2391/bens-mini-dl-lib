@@ -290,11 +290,12 @@ class Tensor:
         return out
 
     # reduction ops
-    def sum(self, axis=None):
+    def sum(self):
         """
         Sum the tensor along the given axis
         """
-        out = np.sum(self.data, axis=axis)
+        # TODO implement axis argument and corresponding backward pass
+        out = np.sum(self.data)
         out = Tensor(out, (self,), 'sum', requires_grad=self.requires_grad)
         
         def _backward():
@@ -306,11 +307,12 @@ class Tensor:
 
         return out
     
-    def max(self, axis=None):
+    def max(self):
         """
         Max of the tensor along the given axis
         """
-        out = np.max(self.data, axis=axis)
+        # TODO implement axis argument and corresponding backward pass
+        out = np.max(self.data)
         out = Tensor(out, (self,), 'max', requires_grad=self.requires_grad)
 
         def _backward():
