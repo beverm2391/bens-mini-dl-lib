@@ -376,11 +376,11 @@ class Tensor:
         return Tensor(np.ones(shape))
     
     @staticmethod
-    def randn(shape):
+    def randn(*shape):
         return Tensor(np.random.randn(*shape))
     
     @staticmethod
-    def rand(shape):
+    def rand(*shape):
         return Tensor(np.random.rand(*shape))
 
     @property
