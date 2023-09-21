@@ -268,14 +268,14 @@ def test_ones():
 
 def test_randn():
     shape = (4, 4)
-    tensor = Tensor.randn(shape)
+    tensor = Tensor.randn(*shape)
     assert tensor.data.shape == shape
     # Cannot assert the values since they are random, but can check type
     assert tensor.data.dtype == np.float64
 
 def test_rand():
     shape = (2, 2)
-    tensor = Tensor.rand(shape)
+    tensor = Tensor.rand(*shape)
     assert tensor.data.shape == shape
     # Values should be between 0 and 1
     assert np.all(tensor.data >= 0)

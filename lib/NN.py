@@ -119,31 +119,15 @@ class Layer(Module):
 
 class Dense(Layer):
     def __init__(self, input_dim: int, output_dim: int):
-        super().__init__() # init Layer
-        self.weights = self._init_weights(input_dim, output_dim)
-        self.biases = self._init_biases(output_dim)
+        super().__init__()
+        self.input_dim = input_dim
+        self.output_dim = output_dim
+        self.weights = Tensor.randn(output_dim, input_dim) * 0.01 # init backwards (output_dim, input_dim) for computational efficiency
+        self.biases = Tensor.zeros(output_dim)
 
-    def _init_weights(self, input_dim: int, output_dim: int) -> Tensor:
-        assert input_dim > 0 and output_dim > 0
-        arr = np.random.randn(input_dim, output_dim) * 0.01
-        return Tensor(arr, requires_grad=True) # defaulting this to True for sanity
-    
-    def _init_biases(self, output_dim: int) -> Tensor:
-        assert output_dim > 0
-        arr = np.zeros((1, output_dim))
-        return Tensor(arr, requires_grad=True) # defaulting this to True for sanity
+    @force_tensor_method
+    def forward(self, inputs: Tensor) -> Tensor:
+        return inputs @ self.weights.T + self.biases # transpose weights for computational efficiency
     
     def parameters(self) -> List[Tensor]:
         return [self.weights, self.biases]
-
-    @force_tensor_method
-    def forward(self, x: Tensor) -> Tensor:
-        input_features = x.shape[1] # input_dim
-        if input_features != self.weights.shape[0]: # input_dim != weights.shape[0] - make sure the tensor matches the way the weights were initialized
-            raise RuntimeError(f"Input tensor with {input_features} features should match layer input dim {self.weights.shape[0]}")
-
-        #? not sure if i need to handle the case where batch_size = 1, and x is a vector
-        # xW or Wx? any transposition?
-        # https://stackoverflow.com/questions/63006388/should-i-transpose-features-or-weights-in-neural-network
-        # "Should I transpose features or weights in Neural network?" - in torch convention, you should transpose weights, but use matmul with the features first.
-        return x @ self.weights.T + self.biases # matrix multiplication
