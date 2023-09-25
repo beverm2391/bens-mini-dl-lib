@@ -12,6 +12,8 @@ class Tensor:
     def __init__(self, data: Union[int, float, list, np.ndarray], children=(), op='', requires_grad: bool = False, axis=None):
         self.data = self._process_data(data)
         self.shape = self.data.shape
+        self.size = self.data.size
+        self.ndim = self.data.ndim
         self.dtype = self.data.dtype
         self.grad = None
         self.requires_grad = requires_grad
@@ -66,10 +68,22 @@ class Tensor:
                 raise TypeError(f"Cannot call {func.__name__} on a scalar")
             return func(self, other)
         return wrapper
+
     
     def _qscalar(self, x):
         """Quasi-scalar: a scalar or a 1-element array"""
         return x.size == 1 or np.isscalar(x) or x.ndim == 0 or x.shape == ()
+    
+    def no_qscalars(func):
+        """
+        Decorator to ensure that the function is not called on a quasi-scalar
+        """
+        @wraps(func)
+        def wrapper(self, other):
+            if self._qscalar(other):
+                raise TypeError(f"Cannot call {func.__name__} on a quasi-scalar")
+            return func(self, other)
+        return wrapper
 
     # ! Backprop ==============================================================
     def backward(self):
@@ -308,12 +322,13 @@ class Tensor:
 
         return out
 
-    @no_scalars
+    @no_qscalars
     @make_tensor
     def __matmul__(self, other: Tensor) -> Tensor:
         """
         Matrix Multiplication
         """
+        # ? make sure to prevent scalars and non-tensors from being passed in (decorators)
         out = np.matmul(self.data, other.data)
         out = Tensor(out, (self, other), 'matmul', requires_grad=self.requires_grad)
 
