@@ -51,6 +51,8 @@ class ReLU(Module):
         out_data = np.maximum(0, x.data)
         out = Tensor(out_data, (x,), 'ReLU', requires_grad=x.requires_grad)
 
+        print("ReLU forward") #? Debug
+
         def _backward():
             x.grad += (out_data > 0) * out.grad  # gradient is passed through where input > 0
         out._backward = _backward
@@ -58,6 +60,7 @@ class ReLU(Module):
         return out
 
 class Sigmoid(Module):
+    # ! NEED TO UPDATE TENOSR CREATION OP AND PARENTS
     def forward(self, x: Tensor) -> Tensor:
         out_data = 1 / (1 + np.exp(-x.data))
         out = Tensor(out_data, requires_grad=x.requires_grad)
@@ -69,6 +72,7 @@ class Sigmoid(Module):
         return out
 
 class Tanh(Module):
+    # ! NEED TO UPDATE TENOSR CREATION OP AND PARENTS
     def forward(self, x: Tensor) -> Tensor:
         out_data = np.tanh(x.data)
         out = Tensor(out_data, requires_grad=x.requires_grad)
@@ -80,6 +84,7 @@ class Tanh(Module):
         return out
 
 class LeakyReLU(Module):
+    # ! NEED TO UPDATE TENOSR CREATION OP AND PARENTS
     def __init__(self, alpha=0.01):
         self.alpha = alpha
 
@@ -133,8 +138,8 @@ class Dense(Layer):
         super().__init__()
         self.input_dim = input_dim
         self.output_dim = output_dim
-        self.weights = Tensor.randn(output_dim, input_dim) * 0.01 # init backwards (output_dim, input_dim) for computational efficiency
-        self.biases = Tensor.zeros(output_dim)
+        self.weights = Tensor.randn(output_dim, input_dim, requires_grad=True) * 0.01 # init backwards (output_dim, input_dim) for computational efficiency
+        self.biases = Tensor.zeros(output_dim, requires_grad=True)
 
     @force_tensor_method
     def forward(self, inputs: Tensor) -> Tensor:
@@ -158,7 +163,7 @@ class BatchNorm(Layer):
         var = np.var(inputs.data, axis=0)
         normalized = (inputs.data - mean) / np.sqrt(var + self.eps)
         out = self.gamma.data * normalized + self.beta.data
-        return Tensor(out)
+        return Tensor(out) # ! need to add parents and op??
 
     def parameters(self) -> List[Tensor]:
         return [self.gamma, self.beta]
@@ -174,7 +179,7 @@ class Dropout(Layer):
     def forward(self, inputs: Tensor) -> Tensor:
         mask = np.random.binomial(1, 1 - self.p, size=inputs.data.shape)
         out = inputs.data * mask / (1 - self.p)
-        return Tensor(out)
+        return Tensor(out) #! need to add parents and op?
 
     def parameters(self) -> List[Tensor]:
         return []  # Dropout has no learnable parameters
@@ -190,6 +195,7 @@ class MLP(Module):
             self.add_module(f"dense_{i}", Dense(layer_dims[i], layer_dims[i+1]))
             if i < len(layer_dims) - 2:
                 self.add_module(f"activation_{i}", activation_fn())
+                print("added activation") #? Debug
 
     @force_tensor_method
     def forward(self, x: Tensor) -> Tensor:
