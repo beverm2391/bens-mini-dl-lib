@@ -95,6 +95,9 @@ class Tensor:
         # go one variable at a time and apply the chain rule to get its gradient
         self.grad = np.ones_like(self.data) # gradient of final node is 1
         for v in reversed(topo): # iterate in reverse topological order
+            # ? DEBUG ------------------------------------------------------------
+            print(f"Creation_op {v._op}, shape {v.data.shape}")
+            # ? DEBUG ------------------------------------------------------------
             v._backward() # call the _backward method
 
     # ! Main Ops ==============================================================
