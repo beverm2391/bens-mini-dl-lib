@@ -102,7 +102,7 @@ class Tensor:
 
     # ! Main Ops ==============================================================
     @make_tensor
-    def __add__(self, other: Tensor) -> Tensor:
+    def OLD__add__(self, other: Tensor) -> Tensor:
         """
         Add two tensors
         """
@@ -131,9 +131,60 @@ class Tensor:
         out._backward = _backward
 
         return out
+    
+    @make_tensor
+    def __add__(self, other: Tensor) -> Tensor:
+        """
+        Updated add method to handle reshape error
+        """
+        rg = self.requires_grad or other.requires_grad
+        out = np.add(self.data, other.data)
+        out = Tensor(out, (self, other), 'add', requires_grad=rg)
+
+        def _backward():
+            is_self_qscalar = self._qscalar(self.data)
+            is_other_qscalar = self._qscalar(other.data)
+
+            # Case 1: both are q-scalars
+            if is_self_qscalar and is_other_qscalar:
+                self.grad += np.sum(out.grad)
+                other.grad += np.sum(out.grad)
+            # Case 2: self is q-scalar, other is not
+            elif is_self_qscalar:
+                self.grad += np.sum(out.grad)
+                other.grad += out.grad
+            # Case 3: other is q-scalar, self is not
+            elif is_other_qscalar:
+                self.grad += out.grad
+                other.grad += np.sum(out.grad)
+            # Case 4: both are tensors but different shapes (hardest case)
+            # ? Can't use reshape like i did first becaus it cant handle different sized tensors
+            elif self.data.shape != other.data.shape:
+                # Identify the axis that should be summed over
+                sum_axes_self = tuple(np.nonzero(np.array(self.data.shape) < np.array(out.data.shape))[0])
+                sum_axes_other = tuple(np.nonzero(np.array(other.data.shape) < np.array(out.data.shape))[0])
+                # Update the gradients for self and other
+                if sum_axes_self:
+                    self.grad += np.sum(out.grad, axis=sum_axes_self).reshape(self.data.shape)
+                else:
+                    self.grad += out.grad
+                
+                if sum_axes_other:
+                    other.grad += np.sum(out.grad, axis=sum_axes_other).reshape(other.data.shape)
+                else:
+                    other.grad += out.grad
+
+            # Case 5: both are tensors and same shape
+            else:
+                self.grad += out.grad
+                other.grad += out.grad
+
+        out._backward = _backward
+
+        return out
 
     @make_tensor
-    def __mul__(self, other: Tensor) -> Tensor: 
+    def OLD__mul__(self, other: Tensor) -> Tensor: 
         """
         Multiply two tensors
         """
@@ -166,7 +217,59 @@ class Tensor:
 
         return out
 
-    def __pow__(self, n: Union[int, float]):
+    @make_tensor
+    def __mul__(self, other: Tensor) -> Tensor:
+        """
+        Multiply two tensors
+        """
+        rg = self.requires_grad or other.requires_grad
+        out = np.multiply(self.data, other.data)
+        out = Tensor(out, (self, other), 'mul', requires_grad=rg)
+
+        def _backward():
+            is_self_qscalar = self._qscalar(self.data)
+            is_other_qscalar = self._qscalar(other.data)
+
+            # Case 1: both are q-scalars
+            if is_self_qscalar and is_other_qscalar:
+                self.grad += np.sum(other.data * out.grad)
+                other.grad += np.sum(self.data * out.grad)
+            # Case 2: self is q-scalar, other is not
+            elif is_self_qscalar:
+                self.grad += np.sum(other.data * out.grad)
+                other.grad += self.data * out.grad
+            # Case 3: other is q-scalar, self is not
+            elif is_other_qscalar:
+                self.grad += other.data * out.grad
+                other.grad += np.sum(self.data * out.grad)
+            # Case 4: both are tensors but different shapes
+            elif self.data.shape != other.data.shape:
+                # Identify axes along which summing needs to occur for the gradients
+                sum_axes_self = tuple(np.nonzero(np.array(self.data.shape) < np.array(out.data.shape))[0])
+                sum_axes_other = tuple(np.nonzero(np.array(other.data.shape) < np.array(out.data.shape))[0])
+                
+                grad_wrt_self = other.data * out.grad
+                grad_wrt_other = self.data * out.grad
+                
+                if sum_axes_self:
+                    self.grad += np.sum(grad_wrt_self, axis=sum_axes_self).reshape(self.data.shape)
+                else:
+                    self.grad += grad_wrt_self
+                
+                if sum_axes_other:
+                    other.grad += np.sum(grad_wrt_other, axis=sum_axes_other).reshape(other.data.shape)
+                else:
+                    other.grad += grad_wrt_other
+            # Case 5: both are tensors and same shape
+            else:
+                self.grad += other.data * out.grad
+                other.grad += self.data * out.grad
+
+        out._backward = _backward
+
+        return out
+
+    def OLD__pow__(self, n: Union[int, float]):
         if not isinstance(n, (int, float)):
             raise NotImplementedError("Only supporting int/float powers for now")
 
@@ -178,6 +281,29 @@ class Tensor:
             d/dx (x^n) = n * x^(n-1)
             """
             self.grad += ((n * self.data**(n - 1)) * out.grad).reshape(self.data.shape) # must reshape to broadcast correctly
+        out._backward = _backward
+
+        return out
+    
+    def __pow__(self, n: Union[int, float]):
+        if not isinstance(n, (int, float)):
+            raise NotImplementedError("Only supporting int/float powers for now")
+        
+        out = np.power(self.data, n)
+        out = Tensor(out, (self,), f'pow', requires_grad=self.requires_grad)
+
+        def _backward():
+            """
+            d/dx (x^n) = n * x^(n-1)
+            """
+            is_self_qscalar = self._qscalar(self.data)
+
+            # Case 1: self is q-scalar
+            if is_self_qscalar:
+                self.grad += np.sum(n * self.data ** (n - 1) * out.grad)
+            # Case 2: self is tensor
+            else:
+                self.grad += (n * self.data ** (n - 1) * out.grad).reshape(self.data.shape)
         out._backward = _backward
 
         return out
