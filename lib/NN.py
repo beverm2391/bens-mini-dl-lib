@@ -49,7 +49,7 @@ class ReLU(Module):
     def forward(self, x: Tensor) -> Tensor:
         # Create a new Tensor that holds the result of the ReLU operation.
         out_data = np.maximum(0, x.data)
-        out = Tensor(out_data, requires_grad=x.requires_grad)
+        out = Tensor(out_data, (x,), 'ReLU', requires_grad=x.requires_grad)
 
         def _backward():
             x.grad += (out_data > 0) * out.grad  # gradient is passed through where input > 0

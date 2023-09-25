@@ -28,6 +28,7 @@ This adds a .pth file to the site-packages directory containing the project's ro
   
 ## TODO
 - [ ] fix tensor backward __add__ method
+- [ ] clean out old methods in Tensor once fully implemented and tested
 - [ ] make sure my test tolerance isn't too high
 - [ ] Test the MLP on a simple dataset, get it converging
 - [ ] make a sequential model class like pytorch
