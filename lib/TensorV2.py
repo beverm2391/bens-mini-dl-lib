@@ -400,7 +400,7 @@ class Tensor:
     def __imod__(self, other): raise NotImplementedError(f"Operation not implemented")
     def __ipow__(self, other): raise NotImplementedError(f"Operation not implemented")
 
-    def log(self):
+    def OLD_log(self):
         if np.any(self.data <= 0):
             raise ValueError("Log is only defined for x > 0")
 
@@ -415,8 +415,32 @@ class Tensor:
 
         out._backward = _backward
         return out
+    
+    def log(self):
+        # Check for domain errors
+        if np.any(self.data <= 0):
+            raise ValueError("Log is only defined for x > 0")
 
-    def exp(self):
+        out = np.log(self.data)
+        out = Tensor(out, (self,), 'log', requires_grad=self.requires_grad)
+
+        def _backward():
+            """
+            d/dx (log(x)) = 1 / x
+            """
+            is_self_qscalar = self._qscalar(self.data)
+
+            # Case 1: True or Quasi-scalar
+            if is_self_qscalar:
+                self.grad += np.sum(out.grad / self.data)
+            # Case 2: General tensor
+            else:
+                self.grad += (out.grad / self.data).reshape(self.data.shape)
+
+        out._backward = _backward
+        return out
+
+    def OLD_exp(self):
         out = np.exp(self.data)
 
         if np.any(np.isinf(out)):
@@ -432,9 +456,32 @@ class Tensor:
 
         out._backward = _backward
         return out
+    
+    def exp(self):
+        out = np.exp(self.data)
+
+        if np.any(np.isinf(out)):
+            raise OverflowError("Exponential resulted in overflow")
+
+        out = Tensor(out, (self,), 'exp', requires_grad=self.requires_grad)
+
+        def _backward():
+            """
+            d/dx (exp(x)) = exp(x)
+            """
+            is_self_qscalar = self._qscalar(self.data)
+            # Case 1: True or Quasi-scalar
+            if is_self_qscalar:
+                self.grad += np.sum(out.grad * out.data)
+            # Case 2: General tensor
+            else:
+                self.grad += (out.grad * out.data).reshape(self.data.shape)
+
+        out._backward = _backward
+        return out
 
     # reduction ops
-    def sum(self):
+    def OLD_sum(self):
         """
         Sum the tensor along the given axis
         """
@@ -451,7 +498,34 @@ class Tensor:
 
         return out
     
-    def max(self):
+    def sum(self, axis=None):
+        """
+        Sum the tensor along the given axis
+        """
+        out = np.sum(self.data, axis=axis)
+        out = Tensor(out, (self,), 'sum', requires_grad=self.requires_grad)
+
+        def _backward():
+            """
+            d/dx (sum(x)) = 1
+            """
+            is_self_qscalar = self._qscalar(self.data)
+
+            # Case 1: True or Quasi-scalar
+            if is_self_qscalar:
+                self.grad += np.sum(out.grad)
+
+            # Case 2 & 3: General tensor (with or without axis)
+            else:
+                expanded_grad = np.ones_like(self.data) * out.grad
+                if axis is not None:
+                    # reshape or expand 
+                    expanded_grad = np.expand_dims(out.grad, axis=axis)
+                self.grad += expanded_grad
+        out._backward = _backward
+        return out
+    
+    def OLD_max(self):
         """
         Max of the tensor along the given axis
         """
@@ -468,7 +542,35 @@ class Tensor:
 
         return out
     
-    def mean(self, axis=None):
+    def max(self, axis=None):
+        """
+        Max of the tensor along the given axis
+        """
+        out_data = np.max(self.data, axis=axis)
+        out = Tensor(out_data, (self,), 'max', requires_grad=self.requires_grad)
+
+        def _backward():
+            """
+            d/dx (max(x)) = 1 if x is the max, 0 otherwise
+            """
+            is_self_qscalar = self._qscalar(self.data)
+
+            # Case 1: True or Quasi-scalar
+            if is_self_qscalar:
+                self.grad += np.sum(out.grad)
+
+            # Case 2 & 3: General tensor (with or without axis)
+            else:
+                if axis is None:
+                    self.grad += np.where(self.data == out_data, out.grad, 0)
+                else:
+                    out_expanded = np.expand_dims(out_data, axis=axis)
+                    self.grad += np.where(self.data == out_expanded, np.expand_dims(out.grad, axis=axis), 0)
+        out._backward = _backward
+        return out
+
+
+    def OLD_mean(self, axis=None):
         """
         Mean of the tensor along the given axis
         """
@@ -483,6 +585,34 @@ class Tensor:
         out._backward = _backward
 
         return out
+    
+    def mean(self, axis=None):
+        """
+        Mean of the tensor along the given axis
+        """
+        out_data = np.mean(self.data, axis=axis)
+        out = Tensor(out_data, (self,), 'mean', requires_grad=self.requires_grad)
+
+        def _backward():
+            """
+            d/dx (mean(x)) = 1 / n
+            """
+            is_self_qscalar = self._qscalar(self.data)
+
+            # Case 1: True or Quasi-scalar
+            if is_self_qscalar:
+                self.grad += np.sum(out.grad)
+
+            # Case 2 & 3: General tensor (with or without axis)
+            else:
+                n = self.data.size if axis is None else self.data.shape[axis]
+                grad_multiplier = out.grad / n
+                if axis is not None:
+                    grad_multiplier = np.expand_dims(grad_multiplier, axis=axis)
+                self.grad += np.ones_like(self.data) * grad_multiplier
+        out._backward = _backward
+        return out
+
 
     def clip(self, min, max) -> Tensor:
         out = np.clip(self.data, min, max)
