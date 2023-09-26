@@ -58,10 +58,9 @@ class ReLU(Module):
         return out
 
 class Sigmoid(Module):
-    # ! NEED TO UPDATE TENOSR CREATION OP AND PARENTS
     def forward(self, x: Tensor) -> Tensor:
         out_data = 1 / (1 + np.exp(-x.data))
-        out = Tensor(out_data, requires_grad=x.requires_grad)
+        out = Tensor(out_data, (x,), 'Sigmoid', requires_grad=x.requires_grad)
 
         def _backward():
             x.grad += out_data * (1 - out_data) * out.grad
@@ -73,7 +72,7 @@ class Tanh(Module):
     # ! NEED TO UPDATE TENOSR CREATION OP AND PARENTS
     def forward(self, x: Tensor) -> Tensor:
         out_data = np.tanh(x.data)
-        out = Tensor(out_data, requires_grad=x.requires_grad)
+        out = Tensor(out_data, (x,), 'tanh', requires_grad=x.requires_grad)
 
         def _backward():
             x.grad += (1 - out_data ** 2) * out.grad
@@ -88,7 +87,7 @@ class LeakyReLU(Module):
 
     def forward(self, x: Tensor) -> Tensor:
         out_data = np.where(x.data > 0, x.data, self.alpha * x.data)
-        out = Tensor(out_data, requires_grad=x.requires_grad)
+        out = Tensor(out_data, (x,), 'leaky ReLU', requires_grad=x.requires_grad)
 
         def _backward():
             x.grad += np.where(x.data > 0, 1, self.alpha) * out.grad
