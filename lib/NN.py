@@ -13,6 +13,19 @@ class Module:
     """
     def __init__(self):
         self._modules = {} # dictionary of sub-modules
+        self.training = True # initially set to training mode
+
+    def train(self):
+        """Set all modules to training mode."""
+        self.training = True
+        for module in self._modules.values():
+            module.train()
+
+    def eval(self):
+        """Set all modules to evaluation mode."""
+        self.training = False
+        for module in self._modules.values():
+            module.eval()
 
     def add_module(self, name: str, module: Module):
         """Add a sub-module to the current module."""
