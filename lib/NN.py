@@ -229,3 +229,16 @@ class MLP(Module):
         for name, module in self._modules.items():
             x = module(x)
         return x
+
+class Sequential(Module):
+    def __init__(self, *layers: Layer) -> None:
+        super().__init__()
+        for i, layer in enumerate(layers):
+            self.add_module(f"layer_{i}", layer)
+        warnings.warn("Sequential model is not tested yet. Use at your own risk.")
+
+    @force_tensor_method
+    def forward(self, x: Tensor) -> Tensor:
+        for name, module in self._modules.items():
+            x = module(x)
+        return x
