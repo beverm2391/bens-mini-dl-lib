@@ -4,11 +4,24 @@ import numpy as np
 import warnings
 from functools import wraps
 from typing import Union
+from contextlib import contextmanager
 
 class Tensor:
     """
     Tensor with Auto Differentiation, v2
     """
+    compute_gradients = True # class attribute to control whether to compute gradients or not
+
+    @staticmethod
+    @contextmanager
+    def no_grad():
+        original_state = Tensor.compute_gradients
+        Tensor.compute_gradients = False
+        try:
+            yield
+        finally:
+            Tensor.compute_gradients = original_state
+
     def __init__(self, data: Union[int, float, list, np.ndarray], children=(), op='', requires_grad: bool = False, axis=None):
         self.data = self._process_data(data)
         self.shape = self.data.shape
@@ -16,7 +29,7 @@ class Tensor:
         self.ndim = self.data.ndim
         self.dtype = self.data.dtype
         self.grad = None
-        self.requires_grad = requires_grad
+        self.requires_grad = requires_grad and Tensor.compute_gradients
         if self.requires_grad:
             self.zero_grad()
         self._backward = lambda: None
@@ -110,7 +123,8 @@ class Tensor:
         self.grad = np.ones_like(self.data) # gradient of final node is 1
         for v in reversed(topo): # iterate in reverse topological order
             # print(f"Creation_op {v._op}, shape {v.data.shape}") # ? Debug
-            v._backward() # call the _backward method
+            if hasattr(v, '_backward'): # handle no_grad context manager
+                v._backward()
 
     # ! Main Ops ==============================================================
     @make_tensor
@@ -160,7 +174,8 @@ class Tensor:
                 self.grad += out.grad
                 other.grad += out.grad
 
-        out._backward = _backward
+        if Tensor.compute_gradients:
+            out._backward = _backward
 
         return out
 
@@ -212,7 +227,8 @@ class Tensor:
                 self.grad += other.data * out.grad
                 other.grad += self.data * out.grad
 
-        out._backward = _backward
+        if Tensor.compute_gradients:
+            out._backward = _backward
 
         return out
 
@@ -236,7 +252,9 @@ class Tensor:
             # Case 2: self is tensor
             else:
                 self.grad += (n * self.data ** (n - 1) * out.grad).reshape(self.data.shape)
-        out._backward = _backward
+
+        if Tensor.compute_gradients:
+            out._backward = _backward
 
         return out
 
@@ -257,7 +275,9 @@ class Tensor:
             self.grad += np.matmul(out.grad, other.data.T).reshape(self.data.shape)
             other.grad += np.matmul(self.data.T, out.grad).reshape(other.data.shape)
 
-        out._backward = _backward
+        if Tensor.compute_gradients:
+            out._backward = _backward
+
         return out
 
 
@@ -339,7 +359,9 @@ class Tensor:
             else:
                 self.grad += (out.grad / self.data).reshape(self.data.shape)
 
-        out._backward = _backward
+        if Tensor.compute_gradients:
+            out._backward = _backward
+
         return out
 
     def exp(self):
@@ -362,7 +384,9 @@ class Tensor:
             else:
                 self.grad += (out.grad * out.data).reshape(self.data.shape)
 
-        out._backward = _backward
+        if Tensor.compute_gradients:
+            out._backward = _backward
+
         return out
 
     # reduction ops
@@ -390,7 +414,8 @@ class Tensor:
                     # reshape or expand 
                     expanded_grad = np.expand_dims(out.grad, axis=axis)
                 self.grad += expanded_grad
-        out._backward = _backward
+        if Tensor.compute_gradients:
+            out._backward = _backward
         return out
 
     def max(self, axis=None):
@@ -417,7 +442,8 @@ class Tensor:
                 else:
                     out_expanded = np.expand_dims(out_data, axis=axis)
                     self.grad += np.where(self.data == out_expanded, np.expand_dims(out.grad, axis=axis), 0)
-        out._backward = _backward
+        if Tensor.compute_gradients:
+            out._backward = _backward
         return out
 
     def mean(self, axis=None):
@@ -444,7 +470,8 @@ class Tensor:
                 if axis is not None:
                     grad_multiplier = np.expand_dims(grad_multiplier, axis=axis)
                 self.grad += np.ones_like(self.data) * grad_multiplier
-        out._backward = _backward
+        if Tensor.compute_gradients:
+            out._backward = _backward
         return out
 
     def clip(self, min, max) -> Tensor:
@@ -458,7 +485,8 @@ class Tensor:
             grad_clip = np.where((self.data >= min) & (self.data <= max), 1, 0)
             self.grad += (out.grad * grad_clip).reshape(self.data.shape)
 
-        out._backward = _backward
+        if Tensor.compute_gradients:
+            out._backward = _backward
         return out
 
     def transpose(self):
@@ -473,7 +501,8 @@ class Tensor:
             d/dx (transpose(x)) = 1
             """
             self.grad += np.transpose(out.grad) # transpose handles the shape correctly
-        out._backward = _backward
+        if Tensor.compute_gradients:
+            out._backward = _backward
 
         return out
 
