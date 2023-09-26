@@ -1,7 +1,7 @@
 import numpy as np
 import torch
 import pytest
-from lib.TensorV2 import Tensor
+from lib.Tensor import Tensor
 from lib.NN import ReLU, Sigmoid, Tanh, LeakyReLU
 
 def test_relu_activation():

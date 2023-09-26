@@ -2,7 +2,7 @@ import numpy as np
 import torch
 import pytest
 
-from lib.TensorV2 import Tensor
+from lib.Tensor import Tensor
 
 # ! Scalar Ops =========================================================
 def test_scalar_addition_common():

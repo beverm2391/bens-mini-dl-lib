@@ -2,7 +2,7 @@ import pytest
 import numpy as np
 import torch
 
-from lib.TensorV2 import Tensor
+from lib.Tensor import Tensor
 from lib.NN import MSELoss, CrossEntropyLoss
 
 def test_MSE():

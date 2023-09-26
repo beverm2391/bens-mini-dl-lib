@@ -2,7 +2,7 @@ import numpy as np
 import torch
 
 from lib.NN import Dense, BatchNorm, Dropout
-from lib.TensorV2 import Tensor
+from lib.Tensor import Tensor
 
 def test_dense():
     input_dim = 5

@@ -1,7 +1,7 @@
 import torch
 import numpy as np
 
-from lib.TensorV2 import Tensor
+from lib.Tensor import Tensor
 from lib.NN import MLP, ReLU
 
 def test_mlp():

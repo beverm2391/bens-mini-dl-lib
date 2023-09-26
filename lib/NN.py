@@ -4,7 +4,7 @@ import numpy as np
 import warnings
 from typing import List, Any
 
-from lib.TensorV2 import Tensor, force_tensor_method
+from lib.Tensor import Tensor, force_tensor_method
 
 # ! BASE CLASSES =========================================================
 class Module:

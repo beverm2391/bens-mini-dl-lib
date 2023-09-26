@@ -1,6 +1,6 @@
 from typing import List
 
-from lib.TensorV2 import Tensor
+from lib.Tensor import Tensor
 
 class Optimizer:
     """
