@@ -27,10 +27,12 @@ This adds a .pth file to the site-packages directory containing the project's ro
 - [X] Test clip
 - [X] fix tensor backward __add__ method
 - [X] clean out old methods in Tensor once fully implemented and tested
-  
+- [X] Test the MLP on a simple synthetic dataset (train/val), get it converging, add necessary methods
+
+
 ## TODO
 
-- [ ] Test the MLP on a simple dataset (train/val), get it converging, add necessary methods
+- [ ] test mlp on a real dataset and get it converging
 - [ ] figure out what basic layers I need to implement
 - [ ] make a sequential model class like pytorch
 - [ ] Get CE loss test passing
