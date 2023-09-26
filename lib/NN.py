@@ -51,8 +51,6 @@ class ReLU(Module):
         out_data = np.maximum(0, x.data)
         out = Tensor(out_data, (x,), 'ReLU', requires_grad=x.requires_grad)
 
-        print("ReLU forward") #? Debug
-
         def _backward():
             x.grad += (out_data > 0) * out.grad  # gradient is passed through where input > 0
         out._backward = _backward
@@ -195,7 +193,6 @@ class MLP(Module):
             self.add_module(f"dense_{i}", Dense(layer_dims[i], layer_dims[i+1]))
             if i < len(layer_dims) - 2:
                 self.add_module(f"activation_{i}", activation_fn())
-                print("added activation") #? Debug
 
     @force_tensor_method
     def forward(self, x: Tensor) -> Tensor:

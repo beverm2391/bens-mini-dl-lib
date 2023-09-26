@@ -25,12 +25,13 @@ This adds a .pth file to the site-packages directory containing the project's ro
 - [X] Test log
 - [X] Test exp
 - [X] Test clip
+- [X] fix tensor backward __add__ method
   
 ## TODO
-- [ ] fix tensor backward __add__ method
+
 - [ ] clean out old methods in Tensor once fully implemented and tested
 - [ ] make sure my test tolerance isn't too high
-- [ ] Test the MLP on a simple dataset, get it converging
+- [ ] Test the MLP on a simple dataset (train/val), get it converging, add necessary methods
 - [ ] make a sequential model class like pytorch
 - [ ] Get CE loss test passing
 - [ ] Clean up unused code in lib
