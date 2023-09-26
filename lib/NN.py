@@ -71,6 +71,7 @@ class ReLU(Module):
         return out
 
 class Sigmoid(Module):
+    @force_tensor_method
     def forward(self, x: Tensor) -> Tensor:
         out_data = 1 / (1 + np.exp(-x.data))
         out = Tensor(out_data, (x,), 'Sigmoid', requires_grad=x.requires_grad)
@@ -82,7 +83,7 @@ class Sigmoid(Module):
         return out
 
 class Tanh(Module):
-    # ! NEED TO UPDATE TENOSR CREATION OP AND PARENTS
+    @force_tensor_method
     def forward(self, x: Tensor) -> Tensor:
         out_data = np.tanh(x.data)
         out = Tensor(out_data, (x,), 'tanh', requires_grad=x.requires_grad)
@@ -94,10 +95,10 @@ class Tanh(Module):
         return out
 
 class LeakyReLU(Module):
-    # ! NEED TO UPDATE TENOSR CREATION OP AND PARENTS
     def __init__(self, alpha=0.01):
         self.alpha = alpha
 
+    @force_tensor_method
     def forward(self, x: Tensor) -> Tensor:
         out_data = np.where(x.data > 0, x.data, self.alpha * x.data)
         out = Tensor(out_data, (x,), 'leaky ReLU', requires_grad=x.requires_grad)
@@ -134,6 +135,7 @@ class Layer(Module):
     def __init__(self):
         super().__init__() # init Module
 
+    @force_tensor_method
     def forward(self, x: Tensor) -> Tensor:
         """
         Forward pass of the layer
@@ -162,18 +164,31 @@ class Dense(Layer):
 class BatchNorm(Layer):
     def __init__(self, num_features):
         super().__init__()
-        self.gamma = Tensor.ones(num_features)
-        self.beta = Tensor.zeros(num_features)
+        self.gamma = Tensor.ones(num_features, requires_grad=True)
+        self.beta = Tensor.zeros(num_features, requires_grad=True)
         self.eps = 1e-5
-
-        warnings.warn("BatchNorm layer is technically tested but not yet fully implemented. Use at your own risk.")
+        self.momentum = 0.1  # adjustable
+        self.running_mean = np.zeros(num_features)
+        self.running_var = np.ones(num_features)
+        raise NotImplementedError("BatchNorm layer is not implemented yet.")
 
     def forward(self, inputs: Tensor) -> Tensor:
-        mean = np.mean(inputs.data, axis=0)
-        var = np.var(inputs.data, axis=0)
-        normalized = (inputs.data - mean) / np.sqrt(var + self.eps)
-        out = self.gamma.data * normalized + self.beta.data
-        return Tensor(out) # ! need to add parents and op??
+        # TODO add all ops to Tensor class
+        if self.training:
+            mean = inputs.mean(axis=0)
+            var = np.var(inputs.data, axis=0) #TODO add variance method to Tensor class
+            
+            # Update running statistics
+            self.running_mean = self.momentum * self.running_mean + (1.0 - self.momentum) * mean
+            self.running_var = self.momentum * self.running_var + (1.0 - self.momentum) * var
+            
+            normalized = (inputs.data - mean) / np.sqrt(var + self.eps)
+            out_data = self.gamma.data * normalized + self.beta.data
+            return Tensor(out_data, (inputs, self.gamma, self.beta), 'batch_norm_train', requires_grad=inputs.requires_grad)
+        else:
+            normalized = (inputs.data - self.running_mean) / np.sqrt(self.running_var + self.eps)
+            out_data = self.gamma.data * normalized + self.beta.data
+            return Tensor(out_data, (inputs, self.gamma, self.beta), 'batch_norm_eval', requires_grad=inputs.requires_grad)
 
     def parameters(self) -> List[Tensor]:
         return [self.gamma, self.beta]
@@ -187,9 +202,12 @@ class Dropout(Layer):
         warnings.warn("Dropout layer is technically tested but not yet fully implemented. Use at your own risk.")
 
     def forward(self, inputs: Tensor) -> Tensor:
-        mask = np.random.binomial(1, 1 - self.p, size=inputs.data.shape)
-        out = inputs.data * mask / (1 - self.p)
-        return Tensor(out) #! need to add parents and op?
+        if self.training:
+            mask = np.random.binomial(1, 1 - self.p, size=inputs.data.shape)
+            out = inputs.data * mask / (1 - self.p)
+            return Tensor(out, (inputs,), 'Dropout', requires_grad=inputs.requires_grad)
+        else:
+            return inputs
 
     def parameters(self) -> List[Tensor]:
         return []  # Dropout has no learnable parameters
