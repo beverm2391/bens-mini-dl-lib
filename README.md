@@ -19,7 +19,7 @@ This adds a .pth file to the site-packages directory containing the project's ro
 - [X] make a nn module that mirrors micrograd but with my logic
 - [X] update my backward method to use Top sort?
 - [X] make a test suite that mirrors micrograd/write sanity checks for Tensor class
-  - [X] figure out why certain operation chains are failing and others aren't
+- [X] figure out why certain operation chains are failing and others aren't
 - [X] Update nn to use new tensor class
 - [X] Add activation functions with tests
 - [X] Test log
@@ -30,13 +30,11 @@ This adds a .pth file to the site-packages directory containing the project's ro
   
 ## TODO
 
-
-- [ ] make sure my test tolerance isn't too high for tests (try a lower one)
 - [ ] Test the MLP on a simple dataset (train/val), get it converging, add necessary methods
+- [ ] figure out what basic layers I need to implement
 - [ ] make a sequential model class like pytorch
 - [ ] Get CE loss test passing
 - [ ] Clean up unused code in lib
-- [ ] Add a training loop
 - [ ] Add data handling
 - [ ] Add evaluation
 - [ ] Add dynamic lr optimizer
