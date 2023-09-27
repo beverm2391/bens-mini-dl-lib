@@ -30,9 +30,10 @@ This adds a .pth file to the site-packages directory containing the project's ro
 - [X] Test the MLP on a simple synthetic dataset (train/val), get it converging, add necessary methods
 
 
-## TODO
+## TODO TASKS
 - [ ] implement reshape for Tensor class, add an auto reshape if ndim of self, other is 1 to avoid dim errors (120, 4), (120,)
 - [ ] test mlp on a real dataset and get it converging
+- [ ] replicate some of [these models/demos](https://github.com/probml/pyprobml/tree/master/notebooks/book1/13) with this lib
 - [ ] figure out what basic layers I need to implement
 - [ ] make a sequential model class like pytorch
 - [ ] Get CE loss test passing
@@ -42,6 +43,9 @@ This adds a .pth file to the site-packages directory containing the project's ro
 - [ ] Add dynamic lr optimizer
 - [ ] Add regularization
 - [ ] Add examples and docs
+
+## TODO IDEAS
+- [ ] reverse engineer some of [these operator abstractions](https://github.com/wilson-labs/cola) to see how they work 
 - [ ] Look into [this](https://vmartin.fr/automatic-jacobian-matrix-computation-with-sympy.html) jacobian matrix optimization
 
 ## Backlog
