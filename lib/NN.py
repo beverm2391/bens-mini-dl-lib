@@ -231,10 +231,10 @@ class MLP(Module):
         return x
 
 class Sequential(Module):
-    def __init__(self, *layers: Layer) -> None:
+    def __init__(self, *modules: Module) -> None:
         super().__init__()
-        for i, layer in enumerate(layers):
-            self.add_module(f"layer_{i}", layer)
+        for i, module in enumerate(modules):
+            self.add_module(f"module_{i}", module)
         warnings.warn("Sequential model is not tested yet. Use at your own risk.")
 
     @force_tensor_method
@@ -242,6 +242,3 @@ class Sequential(Module):
         for name, module in self._modules.items():
             x = module(x)
         return x
-    
-    def parameters(self) -> List[Any]:
-        return super().parameters() # return parameters of all sub-modules

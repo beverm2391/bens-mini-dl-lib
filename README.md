@@ -31,7 +31,7 @@ This adds a .pth file to the site-packages directory containing the project's ro
 
 
 ## TODO
-
+- [ ] implement reshape for Tensor class, add an auto reshape if ndim of self, other is 1 to avoid dim errors (120, 4), (120,)
 - [ ] test mlp on a real dataset and get it converging
 - [ ] figure out what basic layers I need to implement
 - [ ] make a sequential model class like pytorch
