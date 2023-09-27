@@ -242,3 +242,6 @@ class Sequential(Module):
         for name, module in self._modules.items():
             x = module(x)
         return x
+    
+    def parameters(self) -> List[Any]:
+        return super().parameters() # return parameters of all sub-modules
