@@ -204,6 +204,25 @@ def test_max():
     assert np.allclose(a.grad, a_torch.grad.numpy()), f"Expected {a_torch.grad.numpy()} but got {a.grad}"
     assert np.allclose(b.grad, b_torch.grad.numpy()), f"Expected {b_torch.grad.numpy()} but got {b.grad}"
 
+def test_mean():
+    data1 = np.random.rand(2, 3)
+    data2 = np.random.rand(2, 3)
+
+    a = Tensor(data1, requires_grad=True)
+    b = Tensor(data2, requires_grad=True)
+
+    c = a + b
+    c.mean().backward()
+
+    a_torch = torch.tensor(data1, dtype=torch.float32, requires_grad=True)
+    b_torch = torch.tensor(data2, dtype=torch.float32, requires_grad=True)
+
+    c_torch = a_torch + b_torch
+    c_torch.mean().backward()
+
+    assert np.allclose(a.grad, a_torch.grad.numpy()), f"Expected {a_torch.grad.numpy()} but got {a.grad}"
+    assert np.allclose(b.grad, b_torch.grad.numpy()), f"Expected {b_torch.grad.numpy()} but got {b.grad}"
+
 def test_scalar_division():
     data1 = np.random.rand(2, 3)
     data2 = np.random.rand(2, 3)

@@ -29,9 +29,11 @@ This adds a .pth file to the site-packages directory containing the project's ro
 - [X] clean out old methods in Tensor once fully implemented and tested
 - [X] Test the MLP on a simple synthetic dataset (train/val), get it converging, add necessary methods
 - [X] update no_grad context manager via thread local approach
+- [X] fix the reshape method, and test
 
 
 ## TODO TASKS
+- [ ] write a test for mean
 - [ ] write a test for the new no_grad context manager
 - [ ] implement reshape for Tensor class
 - [ ] test mlp on a real dataset and get it converging
