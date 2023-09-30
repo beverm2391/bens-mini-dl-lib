@@ -34,9 +34,8 @@ This adds a .pth file to the site-packages directory containing the project's ro
 - [X] make a sequential model class like pytorch
 
 ## TODO TASKS
-- [ ] getting dtype error in `mlp-real-v1.ipynb` when calling .backward() on the MSE Loss, due to mean operation. Fix this.
 - [ ] write a test for the new no_grad context manager
-- [ ] test mlp on a real dataset and get it converging
+- [ ] build MLP MNIST in pytorch and then replicate in this lib, [data](https://pytorch.org/vision/0.15/generated/torchvision.datasets.MNIST.html#torchvision.datasets.MNIST)
 - [ ] write tests for the sequential model class
 - [ ] figure out what basic layers I need to implement
 - [ ] Get CE loss test passing
