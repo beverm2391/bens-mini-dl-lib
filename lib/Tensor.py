@@ -82,7 +82,6 @@ class Tensor:
             return func(self, other)
         return wrapper
 
-    
     def _qscalar(self, x):
         """Quasi-scalar: a scalar or a 1-element array"""
         return x.size == 1 or np.isscalar(x) or x.ndim == 0 or x.shape == ()
