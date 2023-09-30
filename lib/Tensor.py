@@ -6,22 +6,23 @@ from functools import wraps
 from typing import Union
 from contextlib import contextmanager
 
+import threading
+_local = threading.local() # thread local variable to keep track of whether we are in a no_grad context manager
+
+@contextmanager
+def no_grad():
+    """Context manager to disable gradient computation."""
+    prev_state = getattr(_local, "compute_gradients", True) # get the previous state of the compute_gradients attribute
+    _local.compute_gradients = False
+    try:
+        yield
+    finally:
+        _local.compute_gradients = prev_state
+
 class Tensor:
     """
     Tensor with Auto Differentiation, v2
     """
-    compute_gradients = True # class attribute to control whether to compute gradients or not
-
-    @staticmethod
-    @contextmanager
-    def no_grad():
-        original_state = Tensor.compute_gradients
-        Tensor.compute_gradients = False
-        try:
-            yield
-        finally:
-            Tensor.compute_gradients = original_state
-
     def __init__(self, data: Union[int, float, list, np.ndarray], children=(), op='', requires_grad: bool = False, axis=None):
         self.data = self._process_data(data)
         self.shape = self.data.shape
@@ -29,7 +30,7 @@ class Tensor:
         self.ndim = self.data.ndim
         self.dtype = self.data.dtype
         self.grad = None
-        self.requires_grad = requires_grad and Tensor.compute_gradients
+        self.requires_grad = requires_grad
         if self.requires_grad:
             self.zero_grad()
         self._backward = lambda: None
@@ -38,6 +39,8 @@ class Tensor:
         self.axis = axis
 
     # ! Some Utility Functions =================================================
+    def is_grad(self): return getattr(_local, "compute_gradients", True) # check if we are in a no_grad context manager, which always takes precedence over the requires_grad attribute
+
     def _check_type(self, data):
         """
         Check data type against allowed types, numpy dtypes, etc.
@@ -173,7 +176,7 @@ class Tensor:
                 self.grad += out.grad
                 other.grad += out.grad
 
-        if Tensor.compute_gradients:
+        if self.is_grad(): # if we are in a no_grad context manager, don't add the backward method (thus making it a no-op)
             out._backward = _backward
 
         return out
@@ -226,7 +229,7 @@ class Tensor:
                 self.grad += other.data * out.grad
                 other.grad += self.data * out.grad
 
-        if Tensor.compute_gradients:
+        if self.is_grad():
             out._backward = _backward
 
         return out
@@ -252,7 +255,7 @@ class Tensor:
             else:
                 self.grad += (n * self.data ** (n - 1) * out.grad).reshape(self.data.shape)
 
-        if Tensor.compute_gradients:
+        if self.is_grad():
             out._backward = _backward
 
         return out
@@ -274,7 +277,7 @@ class Tensor:
             self.grad += np.matmul(out.grad, other.data.T).reshape(self.data.shape)
             other.grad += np.matmul(self.data.T, out.grad).reshape(other.data.shape)
 
-        if Tensor.compute_gradients:
+        if self.is_grad():
             out._backward = _backward
 
         return out
@@ -358,7 +361,7 @@ class Tensor:
             else:
                 self.grad += (out.grad / self.data).reshape(self.data.shape)
 
-        if Tensor.compute_gradients:
+        if self.is_grad():
             out._backward = _backward
 
         return out
@@ -383,7 +386,7 @@ class Tensor:
             else:
                 self.grad += (out.grad * out.data).reshape(self.data.shape)
 
-        if Tensor.compute_gradients:
+        if self.is_grad():
             out._backward = _backward
 
         return out
@@ -413,7 +416,7 @@ class Tensor:
                     # reshape or expand 
                     expanded_grad = np.expand_dims(out.grad, axis=axis)
                 self.grad += expanded_grad
-        if Tensor.compute_gradients:
+        if self.is_grad():
             out._backward = _backward
         return out
 
@@ -441,7 +444,7 @@ class Tensor:
                 else:
                     out_expanded = np.expand_dims(out_data, axis=axis)
                     self.grad += np.where(self.data == out_expanded, np.expand_dims(out.grad, axis=axis), 0)
-        if Tensor.compute_gradients:
+        if self.is_grad():
             out._backward = _backward
         return out
 
@@ -469,7 +472,7 @@ class Tensor:
                 if axis is not None:
                     grad_multiplier = np.expand_dims(grad_multiplier, axis=axis)
                 self.grad += np.ones_like(self.data) * grad_multiplier
-        if Tensor.compute_gradients:
+        if self.is_grad():
             out._backward = _backward
         return out
 
@@ -484,10 +487,11 @@ class Tensor:
             grad_clip = np.where((self.data >= min) & (self.data <= max), 1, 0)
             self.grad += (out.grad * grad_clip).reshape(self.data.shape)
 
-        if Tensor.compute_gradients:
+        if self.is_grad():
             out._backward = _backward
         return out
-
+    
+    # ! Shape Ops =========================================================
     def transpose(self):
         """
         Transpose the tensor
@@ -500,7 +504,24 @@ class Tensor:
             d/dx (transpose(x)) = 1
             """
             self.grad += np.transpose(out.grad) # transpose handles the shape correctly
-        if Tensor.compute_gradients:
+        if self.is_grad():
+            out._backward = _backward
+
+        return out
+    
+    def reshape(self, *shape):
+        """
+        Reshape the tensor
+        """
+        out = np.reshape(self.data, shape)
+        out = Tensor(out, (self,), 'reshape', requires_grad=self.requires_grad)
+
+        def _backward():
+            """
+            d/dx (reshape(x)) = 1
+            """
+            self.grad += np.reshape(out.grad, self.data.shape)
+        if self.is_grad():
             out._backward = _backward
 
         return out

@@ -28,10 +28,12 @@ This adds a .pth file to the site-packages directory containing the project's ro
 - [X] fix tensor backward __add__ method
 - [X] clean out old methods in Tensor once fully implemented and tested
 - [X] Test the MLP on a simple synthetic dataset (train/val), get it converging, add necessary methods
+- [X] update no_grad context manager via thread local approach
 
 
 ## TODO TASKS
-- [ ] implement reshape for Tensor class, add an auto reshape if ndim of self, other is 1 to avoid dim errors (120, 4), (120,)
+- [ ] write a test for the new no_grad context manager
+- [ ] implement reshape for Tensor class
 - [ ] test mlp on a real dataset and get it converging
 - [ ] replicate some of [these models/demos](https://github.com/probml/pyprobml/tree/master/notebooks/book1/13) with this lib
 - [ ] figure out what basic layers I need to implement

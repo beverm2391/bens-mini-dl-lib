@@ -281,6 +281,21 @@ def test_rand():
     assert np.all(tensor.data >= 0)
     assert np.all(tensor.data <= 1)
 
+# ! Shape tests =========================================================
+def test_reshape():
+    data = np.random.rand(2, 3)
+    t = Tensor(data, requires_grad=True)
+    pt_t = torch.tensor(data, dtype=torch.float32, requires_grad=True)
+    
+    t_reshape = t.reshape(3, 2)
+    pt_reshape = pt_t.reshape(3, 2)
+
+    t_reshape.sum().backward()
+    pt_reshape.sum().backward()
+
+    assert np.allclose(t_reshape.data, pt_reshape.data.numpy()), f"Expected {pt_reshape.data.numpy()} but got {t_reshape.data}"
+    assert np.allclose(t.grad, pt_t.grad.numpy()), f"Expected {pt_t.grad.numpy()} but got {t.grad}"
+
 # TODO ================================================================
 def BYPASStest_clip():
     data = np.random.rand(2, 3) * 10
