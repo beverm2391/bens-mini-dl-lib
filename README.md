@@ -47,6 +47,7 @@ This adds a .pth file to the site-packages directory containing the project's ro
 - [ ] Add examples and docs
 
 ## TODO IDEAS
+- [ ] watch [this video](https://www.youtube.com/watch?v=VMj-3S1tku0) by Karpathy on backprop and learn from/copy his abstractions
 - [ ] replicate some of [these models/demos](https://github.com/probml/pyprobml/tree/master/notebooks/book1/13) with this lib
 - [ ] reverse engineer some of [these operator abstractions](https://github.com/wilson-labs/cola) to see how they work 
 - [ ] Look into [this](https://vmartin.fr/automatic-jacobian-matrix-computation-with-sympy.html) jacobian matrix optimization
