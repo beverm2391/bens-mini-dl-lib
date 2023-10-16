@@ -34,6 +34,8 @@ This adds a .pth file to the site-packages directory containing the project's ro
 - [X] make a sequential model class like pytorch
 
 ## TODO TASKS
+Just found this amazing book, [Understanding Deep Learning](https://udlbook.github.io/udlbook/) with detailed explanations and example implementations. Putting this here so I can use it as a guide moving forward.
+
 - [ ] write a test for the new no_grad context manager
 - [ ] build MLP MNIST in pytorch and then replicate in this lib, [data](https://pytorch.org/vision/0.15/generated/torchvision.datasets.MNIST.html#torchvision.datasets.MNIST)
 - [ ] write tests for the sequential model class
