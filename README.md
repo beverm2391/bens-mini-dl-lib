@@ -36,8 +36,9 @@ This adds a .pth file to the site-packages directory containing the project's ro
 ## TODO TASKS
 Just found this amazing book, [Understanding Deep Learning](https://udlbook.github.io/udlbook/) with detailed explanations and example implementations. Putting this here so I can use it as a guide moving forward.
 
-- [ ] write a test for the new no_grad context manager
-- [ ] build MLP MNIST in pytorch and then replicate in this lib, [data](https://pytorch.org/vision/0.15/generated/torchvision.datasets.MNIST.html#torchvision.datasets.MNIST)
+- [ ] build models with my lib using MNIST
+  - [ ] build an MLP
+    - [ ] add subscriptable indexing to tensor class (__getitem__, __setitem__, __delitem__)
 - [ ] write tests for the sequential model class
 - [ ] figure out what basic layers I need to implement
 - [ ] Get CE loss test passing
@@ -47,6 +48,7 @@ Just found this amazing book, [Understanding Deep Learning](https://udlbook.gith
 - [ ] Add dynamic lr optimizer
 - [ ] Add regularization
 - [ ] Add examples and docs
+- [ ] write a test for the new no_grad context manager
 
 ## TODO IDEAS
 - [ ] watch [this video](https://www.youtube.com/watch?v=VMj-3S1tku0) by Karpathy on backprop and learn from/copy his abstractions

@@ -545,7 +545,12 @@ class Tensor:
     @property
     def T(self): return self.transpose()
     def __hash__(self): return id(self) # so we can add Tensors to set in backward()
+    
+    # make subscriptable
     def __len__(self): return len(self.data) # so we can use len() on Tensors
+    def __getitem__(self, key): return self.data[key]
+    def __setitem__(self, key, value): self.data[key] = value
+    def __delitem__(self, key): del self.data[key]
 
     def __eq__(self, other: Tensor) -> bool:
         if not isinstance(other, Tensor):
