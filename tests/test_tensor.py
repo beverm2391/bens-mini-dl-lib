@@ -315,6 +315,21 @@ def test_reshape():
     assert np.allclose(t_reshape.data, pt_reshape.data.numpy()), f"Expected {pt_reshape.data.numpy()} but got {t_reshape.data}"
     assert np.allclose(t.grad, pt_t.grad.numpy()), f"Expected {pt_t.grad.numpy()} but got {t.grad}"
 
+# ! Indexing tests ======================================================
+def test_getitem():
+    data = np.random.rand(2, 3)
+    t = Tensor(data, requires_grad=True)
+    pt_t = torch.tensor(data, dtype=torch.float32, requires_grad=True)
+
+    t_getitem = t[0, 1]
+    pt_getitem = pt_t[0, 1]
+
+    t_getitem.sum().backward()
+    pt_getitem.sum().backward()
+
+    assert np.allclose(t_getitem.data, pt_getitem.data.numpy()), f"Expected {pt_getitem.data.numpy()} but got {t_getitem.data}"
+    assert np.allclose(t.grad, pt_t.grad.numpy()), f"Expected {pt_t.grad.numpy()} but got {t.grad}"
+
 # TODO ================================================================
 def BYPASStest_clip():
     data = np.random.rand(2, 3) * 10
@@ -329,7 +344,6 @@ def BYPASStest_clip():
 
     assert np.allclose(a.data, a_torch.data.numpy()), f"Expected {a_torch.data.numpy()} but got {a.data}"
     assert np.allclose(a.grad, a_torch.grad.numpy()), f"Expected {a_torch.grad.numpy()} but got {a.grad}"
-
 
 def test_in_place_operations():
     pass
