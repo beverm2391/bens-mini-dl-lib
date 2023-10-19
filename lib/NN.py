@@ -125,8 +125,8 @@ class CrossEntropyLoss(Loss):
     def forward(self, x: Tensor, y: Tensor) -> Tensor:
         self.input = (x, y)
         epsilon = 1e-12
-        x_clipped = x.clip(epsilon, 1. - epsilon) # clip to avoid log(0)
-        ce = - (y * x_clipped.log() + (1. - y) * (1. - x_clipped).log()).mean() # cross entropy
+        x.clip(epsilon, 1. - epsilon) # clip to avoid log(0)
+        ce = - (y * x.log() + (1. - y) * (1. - x).log()).mean() # cross entropy
         return ce
 
 # ! Layers ===============================================================

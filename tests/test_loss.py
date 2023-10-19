@@ -31,6 +31,9 @@ def test_CrossEntropyLoss():
     x_data = np.array([0.1, 0.8, 0.4, 0.6])
     y_data = np.array([0, 1, 0, 1])
 
+    x_data = np.random.rand(10, 5)
+    y_data = np.random.rand(10, 5)
+
     x = Tensor(x_data, requires_grad=True)
     y = Tensor(y_data, requires_grad=True)
 

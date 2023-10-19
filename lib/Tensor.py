@@ -484,9 +484,18 @@ class Tensor:
             """
             d/dx (clip(x)) = 1 if min <= x <= max, 0 otherwise
             """
-            grad_clip = np.where((self.data >= min) & (self.data <= max), 1, 0)
-            self.grad += (out.grad * grad_clip).reshape(self.data.shape)
+            is_self_qscalar = self._qscalar(self.data)
 
+            # Case 1: True or Quasi-scalar
+            if is_self_qscalar:
+                if min <= self.data <= max:
+                    self.grad += out.grad
+
+            # Case 2 & 3: General tensor (with or without axis)
+            else:
+                grad_clip = np.where((self.data >= min) & (self.data <= max), 1, 0)
+                self.grad += (out.grad * grad_clip).reshape(self.data.shape)
+        
         if self.is_grad():
             out._backward = _backward
         return out

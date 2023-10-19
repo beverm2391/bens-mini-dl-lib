@@ -330,20 +330,21 @@ def test_getitem():
     assert np.allclose(t_getitem.data, pt_getitem.data.numpy()), f"Expected {pt_getitem.data.numpy()} but got {t_getitem.data}"
     assert np.allclose(t.grad, pt_t.grad.numpy()), f"Expected {pt_t.grad.numpy()} but got {t.grad}"
 
-# TODO ================================================================
-def BYPASStest_clip():
+def test_clip():
     data = np.random.rand(2, 3) * 10
 
     a = Tensor(data, requires_grad=True)
-    a = a.clip(2, 8)
+    a.clip(2, 8)
     a.sum().backward()
 
     a_torch = torch.tensor(data, dtype=torch.float32, requires_grad=True)
-    a_torch = torch.clip(a_torch, 2, 8)
+    torch.clip(a_torch, 2, 8)
     a_torch.sum().backward()
 
     assert np.allclose(a.data, a_torch.data.numpy()), f"Expected {a_torch.data.numpy()} but got {a.data}"
     assert np.allclose(a.grad, a_torch.grad.numpy()), f"Expected {a_torch.grad.numpy()} but got {a.grad}"
+
+# TODO ================================================================
 
 def test_in_place_operations():
     pass
