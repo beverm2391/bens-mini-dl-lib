@@ -39,8 +39,8 @@ Just found this amazing book, [Understanding Deep Learning](https://udlbook.gith
 - [ ] build models with my lib using MNIST
   - [ ] build an MLP
     - [X] finish adding subscriptable indexing to tensor class (__getitem__ backward)
-    - [ ] fix clip test
-    - [ ] fix CELoss test
+    - [X] fix clip test
+    - [X] fix CELoss test
 - [ ] write tests for the sequential model class
 - [ ] figure out what basic layers I need to implement
 - [ ] Get CE loss test passing
