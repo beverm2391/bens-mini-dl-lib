@@ -548,9 +548,21 @@ class Tensor:
     
     # make subscriptable
     def __len__(self): return len(self.data) # so we can use len() on Tensors
+    def __getitem__(self, key):
+        """
+        Index the tensor
+        """
+        out = Tensor(self.data[key], (self,), 'getitem', requires_grad=self.requires_grad)
 
-    # TODO - implement these to return a new tensor with the data sliced that will work with backprop
-    def __getitem__(self, key): return self.data[key]
+        def _backward():
+            """
+            d/dx (index(x)) = 1
+            """
+            self.grad[key] += out.grad # update the part of self.grad that was indexed
+        if self.is_grad():
+            out._backward = _backward
+
+        return out
 
     # TODO - figure out backprop later - raise exception if user tries to backprop through a setitem or delitem
     def __setitem__(self, key, value): self.data[key] = value
