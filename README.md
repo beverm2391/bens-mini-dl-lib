@@ -37,13 +37,14 @@ This adds a .pth file to the site-packages directory containing the project's ro
 Just found this amazing book, [Understanding Deep Learning](https://udlbook.github.io/udlbook/) with detailed explanations and example implementations. Putting this here so I can use it as a guide moving forward.
 
 - [ ] build models with my lib using MNIST
-  - [ ] build an MLP
+  - [ ] get MNISTv4 working with my lib
     - [X] finish adding subscriptable indexing to tensor class (__getitem__ backward)
     - [X] fix clip test
     - [X] fix BinaryCELoss test
-    - [X] write CatCELoss test
-    - [ ] write LogSoftmax test
-    - [ ] writhe NegativeLogLikelihood test
+    - [ ] write CCELoss
+      - [ ] write LogSoftmax, add forward and backword tests
+      - [ ] write NegativeLogLikelihood, add forward and backword tests
+    - [ ] get CatCELoss test passing
 - [ ] add a simple dataloader, with option to load all in memory at once
 - [ ] write tests for the sequential model class
 - [ ] figure out what basic layers I need to implement

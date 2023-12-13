@@ -113,40 +113,13 @@ class LeakyReLU(Module):
 class LogSoftmax(Module):
     @force_tensor_method
     def forward(self, x: Tensor) -> Tensor:
-        # Apply the log-softmax function
-        e_x = np.exp(x.data - np.max(x.data, axis=1, keepdims=True))  # for numerical stability
-        out_data = np.log(e_x / e_x.sum(axis=1, keepdims=True))
-        out = Tensor(out_data, (x,), 'LogSoftmax', requires_grad=x.requires_grad)
-
-        def _backward():
-            # Gradient of log-softmax is the output gradient minus the exp of output times sum of output gradients
-            softmax = np.exp(out_data)
-            x.grad += out.grad - softmax * np.sum(out.grad, axis=1, keepdims=True)
-        out._backward = _backward
-
-        return out
+        raise NotImplementedError
 
 # TODO - needs individual test, but tested as part of test_CategoricalCrossEntropyLoss
 class NegativeLogLikelihoodLoss(Module):
     @force_tensor_method
     def forward(self, x: Tensor, y: Tensor) -> Tensor:
-        # x is expected to be log probabilities (output of LogSoftmax)
-        # y is expected to be class indices
-        batch_size = x.shape[0]
-        # Select the log probabilities of the correct classes
-        correct_log_probs = x.data[np.arange(batch_size), y.data.astype(int)]
-        # Compute the negative log likelihood
-        out_data = -correct_log_probs.mean()
-        out = Tensor(out_data, (x, y), 'NLLLoss', requires_grad=x.requires_grad)
-
-        def _backward():
-            # The gradient is -1 at the indices of the correct classes, divided by the batch size
-            grad = np.zeros_like(x.data)
-            grad[np.arange(batch_size), y.data.astype(int)] = -1 / batch_size
-            x.grad += grad * out.grad
-        out._backward = _backward
-
-        return out
+        raise NotImplementedError
 
 # ! Loss Functions =======================================================
 

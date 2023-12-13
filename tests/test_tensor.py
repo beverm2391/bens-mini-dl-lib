@@ -244,6 +244,7 @@ def test_scalar_division():
     assert np.allclose(a.grad, a_torch.grad.numpy()), f"Expected {a_torch.grad.numpy()} but got {a.grad}"
 
 
+# ! this is slightly unstable I think
 def test_log():
     data = np.random.rand(2, 3) + 1  # Add 1 to avoid log(0)
 
