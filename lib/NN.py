@@ -109,6 +109,11 @@ class LeakyReLU(Module):
 
         return out
 
+class SoftMax(Module):
+    @force_tensor_method
+    def forward(self, x: Tensor) -> Tensor:
+        raise NotImplementedError
+
 # TODO - needs individual test, but tested as part of test_CategoricalCrossEntropyLoss
 class LogSoftmax(Module):
     @force_tensor_method

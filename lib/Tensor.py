@@ -501,6 +501,35 @@ class Tensor:
             out._backward = _backward
         return out
     
+    # ! Activation Functions =========================================================
+    def _softmax(self, axis=-1):
+        m = self - self.max(axis=axis, keepdims=True) # m is the max subtracted from self. we calculate this to avoid overflow
+        e = m.exp() # e is the exponential of m
+        return m, e, e.sum(axis=axis, keepdims=True) # return m, e, and the sum of e along the given axis
+
+    def softmax(self, axis=-1):
+        _, e, ss = self._softmax(axis) # m, e, and the sum of e along the given axis
+        out = Tensor((e / ss), (self,), 'softmax', requires_grad=self.requires_grad) # divide e by the sum of e along the given axis
+
+        def _backward():
+            raise NotImplementedError
+
+        if self.is_grad():
+            out._backward = _backward
+        return out
+
+    def log_softmax(self, axis=-1):
+        m, _, ss = self._softmax(axis)
+        out = Tensor((m - ss.log()), (self,), 'log_softmax', requires_grad=self.requires_grad)
+
+        def _backward():
+            raise NotImplementedError
+        
+        if self.is_grad():
+            out._backward = _backward
+        return out
+
+    
     # ! Shape Ops =========================================================
     def transpose(self):
         """
