@@ -411,8 +411,9 @@ class Tensor:
 
             # Case 2 & 3: General tensor (with or without axis)
             else:
-                expanded_grad = np.ones_like(self.data) * out.grad
-                if axis is not None:
+                if axis is None:
+                    expanded_grad = np.ones_like(self.data) * out.grad
+                else: # axis is not none
                     # reshape or expand 
                     expanded_grad = np.expand_dims(out.grad, axis=axis)
                 self.grad += expanded_grad

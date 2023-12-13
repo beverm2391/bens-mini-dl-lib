@@ -40,10 +40,13 @@ Just found this amazing book, [Understanding Deep Learning](https://udlbook.gith
   - [ ] build an MLP
     - [X] finish adding subscriptable indexing to tensor class (__getitem__ backward)
     - [X] fix clip test
-    - [X] fix CELoss test
+    - [X] fix BinaryCELoss test
+    - [X] write CatCELoss test
+    - [ ] write LogSoftmax test
+    - [ ] writhe NegativeLogLikelihood test
+- [ ] add a simple dataloader, with option to load all in memory at once
 - [ ] write tests for the sequential model class
 - [ ] figure out what basic layers I need to implement
-- [ ] Get CE loss test passing
 - [ ] Clean up unused code in lib
 - [ ] Add data handling
 - [ ] Add evaluation
