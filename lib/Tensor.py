@@ -134,9 +134,8 @@ class Tensor:
         """
         Updated add method to handle reshape error
         """
-        rg = self.requires_grad or other.requires_grad
         out = np.add(self.data, other.data)
-        out = Tensor(out, (self, other), 'add', requires_grad=rg)
+        out = Tensor(out, (self, other), 'add', requires_grad=self.requires_grad or other.requires_grad)
 
         def _backward():
             is_self_qscalar = self._qscalar(self.data)
@@ -188,9 +187,8 @@ class Tensor:
         """
         Multiply two tensors
         """
-        rg = self.requires_grad or other.requires_grad
         out = np.multiply(self.data, other.data)
-        out = Tensor(out, (self, other), 'mul', requires_grad=rg)
+        out = Tensor(out, (self, other), 'mul', requires_grad=self.requires_grad or other.requires_grad)
 
         def _backward():
             is_self_qscalar = self._qscalar(self.data)
@@ -270,7 +268,7 @@ class Tensor:
         """
         # ? make sure to prevent scalars and non-tensors from being passed in (decorators)
         out = np.matmul(self.data, other.data)
-        out = Tensor(out, (self, other), 'matmul', requires_grad=self.requires_grad)
+        out = Tensor(out, (self, other), 'matmul', requires_grad=self.requires_grad or other.requires_grad)
 
         def _backward():
             """

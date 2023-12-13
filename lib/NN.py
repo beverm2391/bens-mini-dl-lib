@@ -209,6 +209,7 @@ class Dense(Layer):
     @force_tensor_method
     def forward(self, inputs: Tensor) -> Tensor:
         return inputs @ self.weights.T + self.biases # transpose weights for computational efficiency
+        # return self.weights @ inputs + self.biases # switch them because __matmul__ method outputs with tensor.grad == self.grad
     
     def parameters(self) -> List[Tensor]:
         return [self.weights, self.biases]
