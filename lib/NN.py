@@ -121,12 +121,21 @@ class MSELoss(Loss):
         mse = (diff * diff).mean()
         return mse
 
-class CrossEntropyLoss(Loss):
+class BinaryCrossEntropyLoss(Loss):
     def forward(self, x: Tensor, y: Tensor) -> Tensor:
         self.input = (x, y)
         epsilon = 1e-12
         x = x.clip(epsilon, 1. - epsilon) # clip to avoid log(0)
         ce = - (y * x.log() + (1. - y) * (1. - x).log()).mean() # cross entropy
+        return ce
+
+
+class CategoricalCrossEntropyLoss(Loss):
+    def forward(self, x: Tensor, y: Tensor) -> Tensor:
+        self.input = (x, y)
+        epsilon = 1e-12
+        x = x.clip(epsilon, 1. - epsilon) # clip to avoid log(0)
+        ce = - (y * x.log()).sum(axis=1).mean() # cross entropy
         return ce
 
 # ! Layers ===============================================================
