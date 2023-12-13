@@ -124,7 +124,7 @@ class Tensor:
         # go one variable at a time and apply the chain rule to get its gradient
         self.grad = np.ones_like(self.data) # gradient of final node is 1
         for v in reversed(topo): # iterate in reverse topological order
-            # print(f"Creation_op {v._op}, shape {v.data.shape}") # ? Debug
+            print(f"Creation_op {v._op}, shape {v.data.shape}") # ? Debug
             if hasattr(v, '_backward'): # handle no_grad context manager, even though we technically don't need to because we set the backward method to a no-op `lambda: None`. I've learned that it's better to be safe than sorry
                 v._backward()
 
@@ -141,6 +141,8 @@ class Tensor:
         def _backward():
             is_self_qscalar = self._qscalar(self.data)
             is_other_qscalar = self._qscalar(other.data)
+
+            # print("Self.grad", self.grad)
 
             # Case 1: both are q-scalars
             if is_self_qscalar and is_other_qscalar:
