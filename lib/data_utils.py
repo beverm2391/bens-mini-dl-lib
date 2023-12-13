@@ -1,7 +1,11 @@
 from pathlib import Path
 import gzip
 import pickle
+import math
+from typing import Union
 import requests
+
+from lib.Tensor import Tensor
 
 def get_mnist(data_path: str):
     data_path = Path(data_path)
