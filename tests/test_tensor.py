@@ -241,6 +241,24 @@ def test_mean():
     assert np.allclose(a.grad, a_torch.grad.numpy()), f"Expected {a_torch.grad.numpy()} but got {a.grad}"
     assert np.allclose(b.grad, b_torch.grad.numpy()), f"Expected {b_torch.grad.numpy()} but got {b.grad}"
 
+def test_sum():
+    data1 = np.random.rand(2, 3)
+    data2 = np.random.rand(2, 3)
+
+    a = Tensor(data1, requires_grad=True)
+    b = Tensor(data2, requires_grad=True)
+    c = a + b
+    c.sum().backward()
+
+    a_torch = torch.tensor(data1, dtype=torch.float32, requires_grad=True)
+    b_torch = torch.tensor(data2, dtype=torch.float32, requires_grad=True)
+    c_torch = a_torch + b_torch
+    c_torch.sum().backward()
+
+    assert np.allclose(c.data, ct:=c_torch.data.numpy()), f"Expected {ct} but got {c}"
+    assert np.allclose(a.grad, atg:= a_torch.grad.numpy()), f"Expected {atg} but got {a.grad}"
+    assert np.allclose(b.grad, btg:= b_torch.grad.numpy()), f"Expected {btg} but got {b.grad}"
+
 def test_scalar_division():
     data1 = np.random.rand(2, 3)
     data2 = np.random.rand(2, 3)
