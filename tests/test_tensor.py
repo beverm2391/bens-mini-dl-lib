@@ -203,62 +203,6 @@ def test_multiple_2():
     assert np.allclose(a.grad, a_torch.grad.numpy()), f"Expected {a_torch.grad.numpy()} but got {a.grad}"
     assert np.allclose(b.grad, b_torch.grad.numpy()), f"Expected {b_torch.grad.numpy()} but got {b.grad}"
 
-def test_max():
-    data1 = np.random.rand(2, 3)
-    data2 = np.random.rand(2, 3)
-
-    a = Tensor(data1, requires_grad=True)
-    b = Tensor(data2, requires_grad=True)
-
-    c = a + b
-    c.max().backward()
-
-    a_torch = torch.tensor(data1, dtype=torch.float32, requires_grad=True)
-    b_torch = torch.tensor(data2, dtype=torch.float32, requires_grad=True)
-
-    c_torch = a_torch + b_torch
-    c_torch.max().backward()
-
-    assert np.allclose(a.grad, a_torch.grad.numpy()), f"Expected {a_torch.grad.numpy()} but got {a.grad}"
-    assert np.allclose(b.grad, b_torch.grad.numpy()), f"Expected {b_torch.grad.numpy()} but got {b.grad}"
-
-def test_mean():
-    data1 = np.random.rand(2, 3)
-    data2 = np.random.rand(2, 3)
-
-    a = Tensor(data1, requires_grad=True)
-    b = Tensor(data2, requires_grad=True)
-
-    c = a + b
-    c.mean().backward()
-
-    a_torch = torch.tensor(data1, dtype=torch.float32, requires_grad=True)
-    b_torch = torch.tensor(data2, dtype=torch.float32, requires_grad=True)
-
-    c_torch = a_torch + b_torch
-    c_torch.mean().backward()
-
-    assert np.allclose(a.grad, a_torch.grad.numpy()), f"Expected {a_torch.grad.numpy()} but got {a.grad}"
-    assert np.allclose(b.grad, b_torch.grad.numpy()), f"Expected {b_torch.grad.numpy()} but got {b.grad}"
-
-def test_sum():
-    data1 = np.random.rand(2, 3)
-    data2 = np.random.rand(2, 3)
-
-    a = Tensor(data1, requires_grad=True)
-    b = Tensor(data2, requires_grad=True)
-    c = a + b
-    c.sum().backward()
-
-    a_torch = torch.tensor(data1, dtype=torch.float32, requires_grad=True)
-    b_torch = torch.tensor(data2, dtype=torch.float32, requires_grad=True)
-    c_torch = a_torch + b_torch
-    c_torch.sum().backward()
-
-    assert np.allclose(c.data, ct:=c_torch.data.numpy()), f"Expected {ct} but got {c}"
-    assert np.allclose(a.grad, atg:= a_torch.grad.numpy()), f"Expected {atg} but got {a.grad}"
-    assert np.allclose(b.grad, btg:= b_torch.grad.numpy()), f"Expected {btg} but got {b.grad}"
-
 def test_scalar_division():
     data1 = np.random.rand(2, 3)
     data2 = np.random.rand(2, 3)
@@ -308,6 +252,98 @@ def test_exp():
 
     assert np.allclose(exp_a.data, exp_a_torch.data.numpy()), f"Expected {exp_a_torch.data.numpy()} but got {exp_a.data}"
     assert np.allclose(a.grad, a_torch.grad.numpy()), f"Expected {a_torch.grad.numpy()} but got {a.grad}"
+
+# ! Reduction ops =======================================================
+
+class TestReductionOps:
+    @staticmethod
+    def test_max():
+        data1 = np.random.rand(2, 3)
+        data2 = np.random.rand(2, 3)
+
+        a = Tensor(data1, requires_grad=True)
+        b = Tensor(data2, requires_grad=True)
+
+        c = a + b
+        c.max().backward()
+
+        a_torch = torch.tensor(data1, dtype=torch.float32, requires_grad=True)
+        b_torch = torch.tensor(data2, dtype=torch.float32, requires_grad=True)
+
+        c_torch = a_torch + b_torch
+        c_torch.max().backward()
+
+        assert np.allclose(a.grad, a_torch.grad.numpy()), f"Expected {a_torch.grad.numpy()} but got {a.grad}"
+        assert np.allclose(b.grad, b_torch.grad.numpy()), f"Expected {b_torch.grad.numpy()} but got {b.grad}"
+
+    @staticmethod
+    def test_mean():
+        data1 = np.random.rand(2, 3)
+        data2 = np.random.rand(2, 3)
+
+        a = Tensor(data1, requires_grad=True)
+        b = Tensor(data2, requires_grad=True)
+
+        c = a + b
+        c.mean().backward()
+
+        a_torch = torch.tensor(data1, dtype=torch.float32, requires_grad=True)
+        b_torch = torch.tensor(data2, dtype=torch.float32, requires_grad=True)
+
+        c_torch = a_torch + b_torch
+        c_torch.mean().backward()
+
+        assert np.allclose(a.grad, a_torch.grad.numpy()), f"Expected {a_torch.grad.numpy()} but got {a.grad}"
+        assert np.allclose(b.grad, b_torch.grad.numpy()), f"Expected {b_torch.grad.numpy()} but got {b.grad}"
+
+    @staticmethod
+    def test_sum():
+        data1 = np.random.rand(2, 3)
+        data2 = np.random.rand(2, 3)
+
+        a = Tensor(data1, requires_grad=True)
+        b = Tensor(data2, requires_grad=True)
+        c = a + b
+        c.sum().backward()
+
+        a_torch = torch.tensor(data1, dtype=torch.float32, requires_grad=True)
+        b_torch = torch.tensor(data2, dtype=torch.float32, requires_grad=True)
+        c_torch = a_torch + b_torch
+        c_torch.sum().backward()
+
+        assert np.allclose(c.data, ct:=c_torch.data.numpy()), f"Expected {ct} but got {c}"
+        assert np.allclose(a.grad, atg:= a_torch.grad.numpy()), f"Expected {atg} but got {a.grad}"
+        assert np.allclose(b.grad, btg:= b_torch.grad.numpy()), f"Expected {btg} but got {b.grad}"
+
+    @staticmethod
+    def test_sum_keepdims():
+        matrix = np.random.rand(2, 3)
+        three_dim_tensor = np.random.randint(0, 10, (3, 3, 3))
+
+        a = Tensor(matrix, requires_grad=True)
+        b = Tensor(three_dim_tensor, requires_grad=True)
+
+        c = a.sum(keepdim=True)
+        d = b.sum(keepdim=True)
+
+        a_torch = torch.tensor(matrix, dtype=torch.float32, requires_grad=True)
+        b_torch = torch.tensor(three_dim_tensor, dtype=torch.float32, requires_grad=True)
+
+        c_torch = a_torch.sum(keepdim=True)
+        d_torch = b_torch.sum(keepdim=True)
+
+        assert np.allclose(c.data, ct:=c_torch.data.numpy()), f"Expected {ct} but got {c}"
+        assert np.allclose(d.data, dt:=d_torch.data.numpy()), f"Expected {dt} but got {d}"
+
+        c.sum().backward()
+        d.sum().backward()
+
+        c_torch.sum().backward()
+        d_torch.sum().backward()
+
+        assert np.allclose(a.grad, atg:= a_torch.grad.numpy()), f"Expected {atg} but got {a.grad}"
+        assert np.allclose(b.grad, btg:= b_torch.grad.numpy()), f"Expected {btg} but got {b.grad}"
+
 
 # ! Static method tests ==================================================
 def test_zeros():

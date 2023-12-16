@@ -412,11 +412,11 @@ class Tensor:
         return out
 
     # reduction ops
-    def sum(self, axis=None):
+    def sum(self, axis=None, keepdim=False):
         """
         Sum the tensor along the given axis
         """
-        out = np.sum(self.data, axis=axis)
+        out = np.sum(self.data, axis=axis, keepdims=keepdim)
         out = Tensor(out, (self,), 'sum', requires_grad=self.requires_grad)
 
         def _backward():
@@ -426,7 +426,7 @@ class Tensor:
             is_self_qscalar = self._qscalar(self.data)
 
             # Case 1: True or Quasi-scalar
-            if is_self_qscalar:
+            if is_self_qscalar: # if its a quasi-scalar, we can just add the gradient
                 self.grad += np.sum(out.grad)
 
             # Case 2 & 3: General tensor (with or without axis)
@@ -437,6 +437,7 @@ class Tensor:
                     # reshape or expand 
                     expanded_grad = np.expand_dims(out.grad, axis=axis)
                 self.grad += expanded_grad
+
         if self.is_grad():
             out._backward = _backward
         return out
