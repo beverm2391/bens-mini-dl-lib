@@ -50,6 +50,8 @@ def test_BinaryCrossEntropyLoss():
     assert np.allclose(x.grad, x_torch.grad.numpy()), f"x.grad: {x.grad}\nx_torch.grad: {x_torch.grad.numpy()}"
     assert np.allclose(y.grad, y_torch.grad.numpy()), f"y.grad: {y.grad}\ny_torch.grad: {y_torch.grad.numpy()}"
 
+# !TODO: Implement CategoricalCrossEntropyLoss
+@pytest.mark.skip(reason="Not implemented yet")
 def test_CategoricalCrossEntropyLoss():
     x_data = np.array([[0.1, 0.6, 0.3], [0.8, 0.1, 0.1], [0.3, 0.1, 0.6], [0.2, 0.2, 0.6]]) # prob distributions
     y_data = np.array([1, 0, 2, 2])

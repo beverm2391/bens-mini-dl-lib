@@ -140,6 +140,24 @@ def test_multiple():
     assert np.allclose(a.grad, a_torch.grad.numpy()), f"Expected {a_torch.grad.numpy()} but got {a.grad}"
     assert np.allclose(b.grad, b_torch.grad.numpy()), f"Expected {b_torch.grad.numpy()} but got {b.grad}"
 
+
+class TestDot:
+    @staticmethod
+    def test_scalars():
+        st1, st2 = Tensor(2), Tensor(3)
+        with pytest.raises(TypeError): # can't dot two scalars
+            out = st1.dot(st2)
+
+    @staticmethod
+    def test_vectors():
+        v1, v2 = Tensor([1,2], requires_grad=True), Tensor([3,4], requires_grad=True)
+        out = v1.dot(v2)
+        out.backward()
+
+        assert np.isclose(out.data, 11)
+        assert np.allclose(v1.grad, np.array([3,4])) 
+        assert np.allclose(v2.grad, np.array([1,2]))
+
 def test_matmul():
     data1 = np.random.rand(2, 3)
     data2 = np.random.rand(3, 2)

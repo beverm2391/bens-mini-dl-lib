@@ -34,23 +34,22 @@ This adds a .pth file to the site-packages directory containing the project's ro
 - [X] make a sequential model class like pytorch
 
 ## TODO TASKS
-Just found this amazing book, [Understanding Deep Learning](https://udlbook.github.io/udlbook/) with detailed explanations and example implementations. Putting this here so I can use it as a guide moving forward.
-
+- Just found this amazing book, [Understanding Deep Learning](https://udlbook.github.io/udlbook/) with detailed explanations and example implementations. Putting this here so I can use it as a guide moving forward.
 - [softmax backprop stuff](https://eli.thegreenplace.net/2016/the-softmax-function-and-its-derivative/)
-  - [ ] write a test for dot product
+
+- [ ] get MNISTv4 working with my lib
+  - [X] finish adding subscriptable indexing to tensor class (__getitem__ backward)
+  - [X] fix clip test
+  - [X] write a test for dot product
   - [ ] update the max and sum methods to have a keepdims arg
   - [ ] write softmax and log softmax forward test
   - [ ] write backward methods
+  - [X] fix BinaryCELoss test
+  - [ ] write CCELoss
+    - [ ] write LogSoftmax, add forward and backword tests
+    - [ ] write NegativeLogLikelihood, add forward and backword tests
+  - [ ] get CatCELoss test passing
 
-- [ ] build models with my lib using MNIST
-  - [ ] get MNISTv4 working with my lib
-    - [X] finish adding subscriptable indexing to tensor class (__getitem__ backward)
-    - [X] fix clip test
-    - [X] fix BinaryCELoss test
-    - [ ] write CCELoss
-      - [ ] write LogSoftmax, add forward and backword tests
-      - [ ] write NegativeLogLikelihood, add forward and backword tests
-    - [ ] get CatCELoss test passing
 - [ ] add a simple dataloader, with option to load all in memory at once
 - [ ] write tests for the sequential model class
 - [ ] figure out what basic layers I need to implement

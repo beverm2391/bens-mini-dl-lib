@@ -288,21 +288,16 @@ class Tensor:
         """
         Dot product of two n-dimensional vectors
         """
-        if self.data.ndim >= 2 and other.data.ndim >= 2: return self @ other 
+
+        if any([self.data.ndim > 1, other.data.ndim > 1]):
+            raise ValueError("Dot product only defined for vectors")
 
         out = np.dot(self.data, other.data) # dot product
         out = Tensor(out, (self, other), 'dot', requires_grad=self.requires_grad or other.requires_grad)
 
         def _backward():
-            if self.data.ndim == 1 and other.data.ndim == 1: # vector x vector
-                self.grad += other.data * out.grad
-                other.grad += self.data * out.grad
-            elif self.data.ndim == 2 and other.data.ndim == 1: # matrix x vector
-                self.grad += np.outer(out.grad, other.data)
-                other.grad += np.dot(self.data.T, out.grad)
-            elif self.data.ndim == 1 and other.data.ndim == 2: # vector x matrix
-                self.grad += np.dot(out.grad, other.data.T)
-                other.grad += np.outer(self.data, out.grad)
+            self.grad += other.data * out.grad
+            other.grad += self.data * out.grad
 
         if self.is_grad():
             out._backward = _backward
