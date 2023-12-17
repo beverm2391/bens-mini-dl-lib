@@ -127,12 +127,6 @@ class LogSoftmax(Module):
         out = shiftx - shiftx.exp().sum(axis=-1, keepdims=True).log()
         return out
 
-# TODO - needs individual test, but tested as part of test_CategoricalCrossEntropyLoss
-class NegativeLogLikelihoodLoss(Module):
-    @force_tensor_method
-    def forward(self, x: Tensor, y: Tensor) -> Tensor:
-        raise NotImplementedError
-
 # ! Loss Functions =======================================================
 
 class Loss(Module):
@@ -145,6 +139,17 @@ class MSELoss(Loss):
         mse = (diff * diff).mean()
         return mse
 
+class NegativeLogLikelihoodLoss(Module):
+    @force_tensor_method
+    def forward(self, x: Tensor, y: Tensor) -> Tensor:
+        # x is log probs, y is class labels
+        # https://pytorch.org/docs/stable/generated/torch.nn.NLLLoss.html
+        batch_indices = np.arange(x.shape[0]) # get batch indices
+        true_class_log_probs = x[batch_indices, y.data] # get log probs of true classes
+        loss = -true_class_log_probs.mean()
+        return loss
+
+
 class BinaryCrossEntropyLoss(Loss):
     def forward(self, x: Tensor, y: Tensor) -> Tensor:
         self.input = (x, y)
@@ -155,16 +160,15 @@ class BinaryCrossEntropyLoss(Loss):
 
 class CategoricalCrossEntropyLoss(Loss):
     def __init__(self):
-        super().__init__()
-        self.log_softmax = LogSoftmax()
-        self.nll_loss = NegativeLogLikelihoodLoss()
+        self.lsm = LogSoftmax()
+        self.nll = NegativeLogLikelihoodLoss()
 
     @force_tensor_method
     def forward(self, x: Tensor, y: Tensor) -> Tensor:
         # this takes in class labels instead of one-hot vectors, just like pytorch
         self.input = (x, y) # save input
-        log_probs = self.log_softmax.forward(x) # Apply log softmax to the input tensor x
-        loss = self.nll_loss.forward(log_probs, y) # Compute the negative log likelihood loss
+        log_probs = self.lsm(x) # Apply log softmax to the input tensor x
+        loss = self.nll(log_probs, y) # Compute the negative log likelihood loss
         return loss
 
 # ! Layers ===============================================================

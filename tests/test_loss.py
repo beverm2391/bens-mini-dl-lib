@@ -3,7 +3,7 @@ import numpy as np
 import torch
 
 from lib.Tensor import Tensor
-from lib.NN import MSELoss, BinaryCrossEntropyLoss, CategoricalCrossEntropyLoss
+from lib.NN import MSELoss, BinaryCrossEntropyLoss, CategoricalCrossEntropyLoss, LogSoftmax, NegativeLogLikelihoodLoss
 
 def test_MSE():
     x_data = np.array([0.1, 0.2, 0.3, 0.4])
@@ -26,6 +26,27 @@ def test_MSE():
     assert np.allclose(mse.data, mse_torch.data.numpy()), f"mse.data: {mse.data}\nmse_torch.data: {mse_torch.data.numpy()}"
     assert np.allclose(x.grad, x_torch.grad.numpy()), f"x.grad: {x.grad}\nx_torch.grad: {x_torch.grad.numpy()}"
     assert np.allclose(y.grad, y_torch.grad.numpy()), f"y.grad: {y.grad}\ny_torch.grad: {y_torch.grad.numpy()}"
+
+def test_negative_log_likelihood_loss():
+    data = np.random.rand(2, 3) * 2 - 1
+
+    a = Tensor(data, requires_grad=True)
+    log_softmax = LogSoftmax()
+    nll = NegativeLogLikelihoodLoss()
+
+    result = nll(log_softmax(a), Tensor(np.array([0, 1])))
+    result.backward()
+
+    a_pt = torch.tensor(data, dtype=torch.float32, requires_grad=True)
+    log_softmax_pt = torch.nn.LogSoftmax(dim=-1)
+    nll_pt = torch.nn.NLLLoss()
+
+    result_pt = nll_pt(log_softmax_pt(a_pt), torch.tensor([0, 1]))
+    result_pt.backward()
+
+
+    assert np.allclose(result.data, result_pt.data.numpy())
+    assert np.allclose(a.grad, a_pt.grad.numpy())
 
 def test_BinaryCrossEntropyLoss():
     x_data = np.array([0.1, 0.8, 0.4, 0.6])
@@ -50,8 +71,6 @@ def test_BinaryCrossEntropyLoss():
     assert np.allclose(x.grad, x_torch.grad.numpy()), f"x.grad: {x.grad}\nx_torch.grad: {x_torch.grad.numpy()}"
     assert np.allclose(y.grad, y_torch.grad.numpy()), f"y.grad: {y.grad}\ny_torch.grad: {y_torch.grad.numpy()}"
 
-# !TODO: Implement CategoricalCrossEntropyLoss
-@pytest.mark.skip(reason="Not implemented yet")
 def test_CategoricalCrossEntropyLoss():
     x_data = np.array([[0.1, 0.6, 0.3], [0.8, 0.1, 0.1], [0.3, 0.1, 0.6], [0.2, 0.2, 0.6]]) # prob distributions
     y_data = np.array([1, 0, 2, 2])

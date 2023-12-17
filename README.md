@@ -47,11 +47,11 @@ This adds a .pth file to the site-packages directory containing the project's ro
   - [X] write softmax and log softmax forward test
   - [X] fix BinaryCELoss test
   - [X] write log softmax func and test
-  - [ ] write negative log likelihood func and test
-  - [ ] write CCELoss
-  - [ ] get CatCELoss test passing
+  - [X] write negative log likelihood func and test
+  - [X] write CCELoss
+  - [X] get CatCELoss test passing
 
-- [ ] add keepdims to rest of reduction ops**
+- [ ] add keepdims to rest of reduction ops
 - [ ] add a simple dataloader, with option to load all in memory at once
 - [ ] write tests for the sequential model class
 - [ ] figure out what basic layers I need to implement

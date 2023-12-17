@@ -682,14 +682,17 @@ class Tensor:
         """
         Index the tensor
         """
-        out = Tensor(self.data[key], (self,), 'getitem',
-                     requires_grad=self.requires_grad)
+        out = Tensor(self.data[key], (self,), 'getitem', requires_grad=self.requires_grad)
 
         def _backward():
-            """
-            d/dx (index(x)) = 1
-            """
-            self.grad[key] += out.grad  # update the part of self.grad that was indexed
+            if isinstance(key, tuple) and len(key) == 2:
+                # advanced indexing (originally for negative likelihood loss)
+                grad = np.zeros_like(self.data)
+                np.add.at(grad, key, out.grad)
+                self.grad += grad
+            else:
+                self.grad[key] += out.grad  # update the part of self.grad that was indexed
+
         if self.is_grad():
             out._backward = _backward
 

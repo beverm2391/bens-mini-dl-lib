@@ -2,7 +2,9 @@ import numpy as np
 import torch
 import pytest
 from lib.Tensor import Tensor
-from lib.NN import ReLU, Sigmoid, Tanh, LeakyReLU, Softmax, LogSoftmax
+from lib.NN import ReLU, Sigmoid, Tanh, LeakyReLU, Softmax, LogSoftmax, NegativeLogLikelihoodLoss
+
+np.random.seed(0) # Set seed for reproducibility
 
 def test_relu_activation():
     data = np.random.rand(2, 3) * 2 - 1
@@ -79,7 +81,6 @@ def test_softmax():
 
     assert np.allclose(result_a.sum(axis=-1).data, np.ones((2, 1)))
     assert np.allclose(result_a.data, result_a_pt.data.numpy())
-
 
 def test_log_softmax():
     data = np.random.rand(2, 3) * 2 - 1
