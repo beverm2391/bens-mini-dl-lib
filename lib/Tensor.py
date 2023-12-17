@@ -147,8 +147,7 @@ class Tensor:
         Updated add method to handle reshape error
         """
         out = np.add(self.data, other.data)
-        out = Tensor(out, (self, other), 'add',
-                     requires_grad=self.requires_grad or other.requires_grad)
+        out = Tensor(out, (self, other), 'add', requires_grad=self.requires_grad or other.requires_grad)
 
         def _backward():
             is_self_qscalar = self._qscalar(self.data)
@@ -178,14 +177,14 @@ class Tensor:
                     np.array(other.data.shape) < np.array(out.data.shape))[0])
                 # Update the gradients for self and other
                 if sum_axes_self:
-                    self.grad += np.sum(out.grad,
-                                        axis=sum_axes_self).reshape(self.data.shape)
+                    # self.grad += np.sum(out.grad, axis=sum_axes_self).reshape(self.data.shape)
+                    self.grad += np.sum(out.grad, axis=sum_axes_self)
                 else:
                     self.grad += out.grad
 
                 if sum_axes_other:
-                    other.grad += np.sum(out.grad,
-                                         axis=sum_axes_other).reshape(other.data.shape)
+                    # other.grad += np.sum(out.grad, axis=sum_axes_other).reshape(other.data.shape)
+                    other.grad += np.sum(out.grad, axis=sum_axes_other)
                 else:
                     other.grad += out.grad
 
