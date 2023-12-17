@@ -323,17 +323,17 @@ class TestReductionOps:
         a = Tensor(matrix, requires_grad=True)
         b = Tensor(three_dim_tensor, requires_grad=True)
 
-        c = a.sum(keepdim=True)
-        d = b.sum(keepdim=True)
+        c = a.sum(axis=1, keepdims=True)
+        d = b.sum(axis=1, keepdims=True)
 
         a_torch = torch.tensor(matrix, dtype=torch.float32, requires_grad=True)
         b_torch = torch.tensor(three_dim_tensor, dtype=torch.float32, requires_grad=True)
 
-        c_torch = a_torch.sum(keepdim=True)
-        d_torch = b_torch.sum(keepdim=True)
+        c_torch = a_torch.sum(axis=1, keepdim=True)
+        d_torch = b_torch.sum(axis=1, keepdim=True)
 
-        assert np.allclose(c.data, ct:=c_torch.data.numpy()), f"Expected {ct} but got {c}"
-        assert np.allclose(d.data, dt:=d_torch.data.numpy()), f"Expected {dt} but got {d}"
+        assert np.allclose(c.data, ct:=c_torch.data), f"Expected {ct} but got {c}"
+        assert np.allclose(d.data, dt:=d_torch.data), f"Expected {dt} but got {d}"
 
         c.sum().backward()
         d.sum().backward()

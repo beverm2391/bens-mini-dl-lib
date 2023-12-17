@@ -41,8 +41,9 @@ This adds a .pth file to the site-packages directory containing the project's ro
   - [X] finish adding subscriptable indexing to tensor class (__getitem__ backward)
   - [X] fix clip test
   - [X] write a test for dot product
-  - [ ] write a test for sum with axis and keepdims
+  - [X] write a test for sum with axis and keepdims
   - [ ] add keepdims to sum, max
+  - [ ] write a test for max with axis and keepdims
   - [ ] add keepdims to rest of reduction ops
   - [ ] write softmax and log softmax forward test
   - [ ] write backward methods
