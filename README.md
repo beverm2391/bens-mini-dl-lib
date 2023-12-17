@@ -32,6 +32,8 @@ This adds a .pth file to the site-packages directory containing the project's ro
 - [X] fix the reshape method, and test
 - [X] write a test for mean
 - [X] make a sequential model class like pytorch
+- [ ] fix the reshape problem in pytorch that makes a 1D bias vector into 2D (this is bad)
+  - [ ] do this by outlining specific test cases and writing tests. focus on actual cases in training models, not hypotheticals
 
 ## TODO TASKS
 - Just found this amazing book, [Understanding Deep Learning](https://udlbook.github.io/udlbook/) with detailed explanations and example implementations. Putting this here so I can use it as a guide moving forward.
