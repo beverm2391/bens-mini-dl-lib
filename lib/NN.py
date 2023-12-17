@@ -197,7 +197,9 @@ class Dense(Layer):
 
     @force_tensor_method
     def forward(self, inputs: Tensor) -> Tensor:
-        return inputs @ self.weights.T + self.biases # transpose weights for computational efficiency
+        assert self.biases.ndim == 1, "Biases must be a 1D tensor."
+        assert isinstance(self.biases, Tensor), "Biases must be a Tensor."
+        return (inputs @ self.weights.T) + self.biases # transpose weights for computational efficiency
         # return self.weights @ inputs + self.biases # switch them because __matmul__ method outputs with tensor.grad == self.grad
     
     def parameters(self) -> List[Tensor]:
@@ -285,3 +287,10 @@ class Sequential(Module):
         for name, module in self._modules.items():
             x = module(x)
         return x
+    
+    # make sure to test this
+    def parameters(self) -> List[Tensor]:
+        params = []
+        for module in self._modules.values():
+            params.append(module.parameters())
+        return params

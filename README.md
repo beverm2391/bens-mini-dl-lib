@@ -50,7 +50,11 @@ This adds a .pth file to the site-packages directory containing the project's ro
   - [X] write negative log likelihood func and test
   - [X] write CCELoss
   - [X] get CatCELoss test passing
+  - [ ] get a single iteration of MNISTv4 working manually
+  - [ ] train it
 
+- [ ] fix parameters method in nn module Sequential class
+- [ ] make sure all two tensor ops can handle backward prop when one input tensor has no gradient
 - [ ] add keepdims to rest of reduction ops
 - [ ] add a simple dataloader, with option to load all in memory at once
 - [ ] write tests for the sequential model class

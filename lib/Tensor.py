@@ -15,8 +15,7 @@ _local = threading.local()
 @contextmanager
 def no_grad():
     """Context manager to disable gradient computation."""
-    prev_state = getattr(_local, "compute_gradients",
-                         True)  # get the previous state of the compute_gradients attribute
+    prev_state = getattr(_local, "compute_gradients", True)  # get the previous state of the compute_gradients attribute
     _local.compute_gradients = False
     try:
         yield
@@ -37,8 +36,7 @@ class Tensor:
         self.dtype = self.data.dtype
         self.grad = None
         self.requires_grad = requires_grad
-        if self.requires_grad:
-            self.zero_grad()
+        if self.requires_grad: self.zero_grad()
         self._backward = lambda: None
         self._prev = set(children)
         self._op = op
@@ -63,10 +61,7 @@ class Tensor:
 
     def _process_data(self, data: Union[int, float, list, np.ndarray]) -> np.ndarray:
         self._check_type(data)  # check the type of the data
-        if isinstance(data, np.ndarray):
-            return data
-        else:
-            return np.array(data)
+        return data if isinstance(data, np.ndarray) else np.array(data)
 
     def zero_grad(self):
         # force float64 to avoid broadcasting issues down the line
@@ -116,8 +111,7 @@ class Tensor:
         Backpropagation
         """
         if self.data.ndim > 0:
-            warnings.warn(
-                "Backpropagation only supported for scalar values, not arrays")
+            warnings.warn("Backpropagation only supported for scalar values, not arrays")
             return
 
         # topological order all of the children in the graph
@@ -136,7 +130,7 @@ class Tensor:
         # go one variable at a time and apply the chain rule to get its gradient
         self.grad = np.ones_like(self.data)  # gradient of final node is 1
         for v in reversed(topo):  # iterate in reverse topological order
-            print(f"Creation_op {v._op}, shape {v.data.shape}")  # ? Debug
+            print(f"Creation_op {v._op}, shape :{v.data.shape}, grad shape: {v.grad.shape if v.grad is not None else 'No Grad'}")  # ? USE THIS TO DEBUG AUTOGRAD
             if hasattr(v, '_backward'):  # handle no_grad context manager, even though we technically don't need to because we set the backward method to a no-op `lambda: None`. I've learned that it's better to be safe than sorry
                 v._backward()
 
@@ -147,14 +141,11 @@ class Tensor:
         Updated add method to handle reshape error
         """
         out = np.add(self.data, other.data)
-        out = Tensor(out, (self, other), 'add',
-                     requires_grad=self.requires_grad or other.requires_grad)
+        out = Tensor(out, (self, other), 'add', requires_grad=self.requires_grad or other.requires_grad)
 
         def _backward():
             is_self_qscalar = self._qscalar(self.data)
             is_other_qscalar = self._qscalar(other.data)
-
-            # print("Self.grad", self.grad)
 
             # Case 1: both are q-scalars
             if is_self_qscalar and is_other_qscalar:
@@ -169,26 +160,22 @@ class Tensor:
                 self.grad += out.grad
                 other.grad += np.sum(out.grad)
             # Case 4: both are tensors but different shapes (hardest case)
-            # ? Can't use reshape like i did first becaus it cant handle different sized tensors
             elif self.data.shape != other.data.shape:
-                # Identify the axis that should be summed over
-                sum_axes_self = tuple(np.nonzero(
-                    np.array(self.data.shape) < np.array(out.data.shape))[0])
-                sum_axes_other = tuple(np.nonzero(
-                    np.array(other.data.shape) < np.array(out.data.shape))[0])
-                # Update the gradients for self and other
-                if sum_axes_self:
-                    self.grad += np.sum(out.grad,
-                                        axis=sum_axes_self).reshape(self.data.shape)
+                # If self is a bias (1D tensor), sum gradients over all dimensions except the bias dimension
+                if self.data.ndim == 1:
+                    # Sum over all dimensions except the last (bias dimension)
+                    axis_to_sum = tuple(range(out.grad.ndim - 1))
+                    self.grad += np.sum(out.grad, axis=axis_to_sum)
                 else:
                     self.grad += out.grad
 
-                if sum_axes_other:
-                    other.grad += np.sum(out.grad,
-                                         axis=sum_axes_other).reshape(other.data.shape)
+                # If other is a bias (1D tensor), sum gradients over all dimensions except the bias dimension
+                if other.data.ndim == 1:
+                    # Sum over all dimensions except the last (bias dimension)
+                    axis_to_sum = tuple(range(out.grad.ndim - 1))
+                    other.grad += np.sum(out.grad, axis=axis_to_sum)
                 else:
                     other.grad += out.grad
-
             # Case 5: both are tensors and same shape
             else:
                 self.grad += out.grad
@@ -205,8 +192,7 @@ class Tensor:
         Multiply two tensors
         """
         out = np.multiply(self.data, other.data)
-        out = Tensor(out, (self, other), 'mul',
-                     requires_grad=self.requires_grad or other.requires_grad)
+        out = Tensor(out, (self, other), 'mul', requires_grad=self.requires_grad or other.requires_grad)
 
         def _backward():
             is_self_qscalar = self._qscalar(self.data)
@@ -236,14 +222,12 @@ class Tensor:
                 grad_wrt_other = self.data * out.grad
 
                 if sum_axes_self:
-                    self.grad += np.sum(grad_wrt_self,
-                                        axis=sum_axes_self).reshape(self.data.shape)
+                    self.grad += np.sum(grad_wrt_self, axis=sum_axes_self).reshape(self.data.shape)
                 else:
                     self.grad += grad_wrt_self
 
                 if sum_axes_other:
-                    other.grad += np.sum(grad_wrt_other,
-                                         axis=sum_axes_other).reshape(other.data.shape)
+                    other.grad += np.sum(grad_wrt_other, axis=sum_axes_other).reshape(other.data.shape)
                 else:
                     other.grad += grad_wrt_other
             # Case 5: both are tensors and same shape
@@ -275,8 +259,7 @@ class Tensor:
                 self.grad += np.sum(n * self.data ** (n - 1) * out.grad)
             # Case 2: self is tensor
             else:
-                self.grad += (n * self.data ** (n - 1) *
-                              out.grad).reshape(self.data.shape)
+                self.grad += (n * self.data ** (n - 1) * out.grad).reshape(self.data.shape)
 
         if self.is_grad():
             out._backward = _backward
@@ -291,17 +274,25 @@ class Tensor:
         """
         # ? make sure to prevent scalars and non-tensors from being passed in (decorators)
         out = np.matmul(self.data, other.data)
-        out = Tensor(out, (self, other), 'matmul',
-                     requires_grad=self.requires_grad or other.requires_grad)
+        out = Tensor(out, (self, other), 'matmul', requires_grad=self.requires_grad or other.requires_grad) #! <---- this line
 
         def _backward():
             """
             (A @ B)' = A' @ B + A @ B'
             """
-            self.grad += np.matmul(out.grad,
-                                   other.data.T).reshape(self.data.shape)
-            other.grad += np.matmul(self.data.T,
-                                    out.grad).reshape(other.data.shape)
+            # ! this contingency is needed because of the line above because the backward method will be called if EITHER parent requires grad
+            # ! so for the one that doesn't require grad, its grad is None and we can't add to it, raising an error
+            if self.requires_grad:
+                if self.grad is None:
+                    self.grad = np.matmul(out.grad, other.data.T).reshape(self.data.shape)
+                else:
+                    self.grad += np.matmul(out.grad, other.data.T).reshape(self.data.shape)
+
+            if other.requires_grad:
+                if other.grad is None:
+                    other.grad = np.matmul(self.data.T, out.grad).reshape(other.data.shape)
+                else:
+                    other.grad += np.matmul(self.data.T, out.grad).reshape(other.data.shape)
 
         if self.is_grad():
             out._backward = _backward
@@ -319,8 +310,7 @@ class Tensor:
             raise ValueError("Dot product only defined for vectors")
 
         out = np.dot(self.data, other.data)  # dot product
-        out = Tensor(out, (self, other), 'dot',
-                     requires_grad=self.requires_grad or other.requires_grad)
+        out = Tensor(out, (self, other), 'dot', requires_grad=self.requires_grad or other.requires_grad)
 
         def _backward():
             self.grad += other.data * out.grad
@@ -532,8 +522,7 @@ class Tensor:
         Mean of the tensor along the given axis
         """
         out_data = np.mean(self.data, axis=axis)
-        out = Tensor(out_data, (self,), 'mean',
-                     requires_grad=self.requires_grad)
+        out = Tensor(out_data, (self,), 'mean', requires_grad=self.requires_grad)
 
         def _backward():
             """
@@ -574,43 +563,8 @@ class Tensor:
 
             # Case 2 & 3: General tensor (with or without axis)
             else:
-                grad_clip = np.where((self.data >= min) &
-                                     (self.data <= max), 1, 0)
+                grad_clip = np.where((self.data >= min) & (self.data <= max), 1, 0)
                 self.grad += (out.grad * grad_clip).reshape(self.data.shape)
-
-        if self.is_grad():
-            out._backward = _backward
-        return out
-
-    # ! Activation Functions =========================================================
-    def _softmax(self, axis=-1):
-        # m is the max subtracted from self. we calculate this to avoid overflow
-        m = self - self.max(axis=axis, keepdims=True)
-        e = m.exp()  # e is the exponential of m
-        # return m, e, and the sum of e along the given axis
-        return m, e, e.sum(axis=axis, keepdims=True)
-
-    def softmax(self, axis=-1):
-        # m, e, and the sum of e along the given axis
-        _, e, ss = self._softmax(axis)
-        # divide e by the sum of e along the given axis
-        out = Tensor((e / ss), (self,), 'softmax',
-                     requires_grad=self.requires_grad)
-
-        def _backward():
-            raise NotImplementedError
-
-        if self.is_grad():
-            out._backward = _backward
-        return out
-
-    def log_softmax(self, axis=-1):
-        m, _, ss = self._softmax(axis)
-        out = Tensor((m - ss.log()), (self,), 'log_softmax',
-                     requires_grad=self.requires_grad)
-
-        def _backward():
-            raise NotImplementedError
 
         if self.is_grad():
             out._backward = _backward
@@ -623,15 +577,13 @@ class Tensor:
         Transpose the tensor
         """
         out = np.transpose(self.data)
-        out = Tensor(out, (self,), 'transpose',
-                     requires_grad=self.requires_grad)
+        out = Tensor(out, (self,), 'transpose', requires_grad=self.requires_grad)
 
         def _backward():
             """
             d/dx (transpose(x)) = 1
             """
-            self.grad += np.transpose(
-                out.grad)  # transpose handles the shape correctly
+            self.grad += np.transpose(out.grad)  # transpose handles the shape correctly
         if self.is_grad():
             out._backward = _backward
 
@@ -687,11 +639,11 @@ class Tensor:
         def _backward():
             if isinstance(key, tuple) and len(key) == 2:
                 # advanced indexing (originally for negative likelihood loss)
-                grad = np.zeros_like(self.data)
-                np.add.at(grad, key, out.grad)
-                self.grad += grad
+                if self.grad is None: self.grad = np.zeros_like(self.data) #? in case one parent tensor had requires_grad=False
+                np.add.at(self.grad, key, out.grad)
             else:
-                self.grad[key] += out.grad  # update the part of self.grad that was indexed
+                if self.grad is None: self.grad = np.zeros_like(self.data) #? in case one parent tensor had requires_grad=False
+                self.grad[key] += out.grad if out.grad is not None else np.zeros_like(self.data[key]) #? in case one parent tensor had requires_grad=False
 
         if self.is_grad():
             out._backward = _backward
