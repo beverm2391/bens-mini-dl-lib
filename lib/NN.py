@@ -109,22 +109,15 @@ class LeakyReLU(Module):
 
         return out
 
-class SoftMax(Module):
-    #! https://eli.thegreenplace.net/2016/the-softmax-function-and-its-derivative/
+class Softmax(Module):
+    #https://eli.thegreenplace.net/2016/the-softmax-function-and-its-derivative/
     @force_tensor_method
     def forward(self, x: Tensor) -> Tensor:
         shiftx = x - x.max(axis=-1, keepdims=True) # Subtract the max of x.data along the last axis for numerical stability.
         exps = shiftx.exp() # get exponential of shifted data
-
-        out_data = exps / exps.sum(axis=-1, keepdims=True) # Normalize along the last axis so they sum to 1 (making a prob distribution)
-        out = Tensor(out_data, (x,), 'softmax', requires_grad=x.requires_grad) # make tensor
+        out = exps / exps.sum(axis=-1, keepdims=True) # Normalize along the last axis so they sum to 1 (making a prob distribution)
         
-        def _backward(self, x: Tensor) -> Tensor:
-            s = out.data.reshape(-1, 1) # reshape to (N, 1) where N is the number of samples
-            jacobian = np.diagflat(s) - np.dot(s, s.T) # compute jacobian matrix
-            x.grad += np.dot(out.grad.reshape(s.shape[0], -1), jacobian).reshape(x.grad.shape) # adjust the gradients shape to maatch input tensor and multiply by the jacobian
-        out._backward = _backward
-
+        # ! Since each operation has its own backward method, we don't need to define one here!
         return out
 
 # TODO - needs individual test, but tested as part of test_CategoricalCrossEntropyLoss

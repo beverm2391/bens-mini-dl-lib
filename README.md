@@ -44,12 +44,11 @@ This adds a .pth file to the site-packages directory containing the project's ro
   - [X] write a test for sum with axis and keepdims
   - [X] add keepdims to sum, max
   - [X] write a test for max with axis and keepdims
-
-  - [ ] write softmax and log softmax forward test
+  - [X] write softmax and log softmax forward test
   - [X] fix BinaryCELoss test
+  - [ ] write log softmax func and test
+  - [ ] write negative log likelihood func and test
   - [ ] write CCELoss
-    - [ ] write LogSoftmax, add forward and backword tests
-    - [ ] write NegativeLogLikelihood, add forward and backword tests
   - [ ] get CatCELoss test passing
 
 - [ ] add keepdims to rest of reduction ops**

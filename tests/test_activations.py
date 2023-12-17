@@ -2,7 +2,7 @@ import numpy as np
 import torch
 import pytest
 from lib.Tensor import Tensor
-from lib.NN import ReLU, Sigmoid, Tanh, LeakyReLU
+from lib.NN import ReLU, Sigmoid, Tanh, LeakyReLU, Softmax
 
 def test_relu_activation():
     data = np.random.rand(2, 3) * 2 - 1
@@ -63,3 +63,19 @@ def test_leaky_relu_activation():
 
     assert np.allclose(result_a.data, result_a_torch.data.numpy())
     assert np.allclose(a.grad, a_torch.grad.data.numpy())
+
+
+def test_softmax_unit():
+    data = np.random.rand(2, 3) * 2 - 1 
+    
+    a = Tensor(data, requires_grad=True)
+    softmax = Softmax()
+
+    a_pt = torch.tensor(data, dtype=torch.float32, requires_grad=True)
+    softmax_pt = torch.nn.Softmax(dim=-1)
+
+    result_a = softmax(a)
+    result_a_pt = softmax_pt(a_pt)
+
+    assert np.allclose(result_a.sum(axis=-1).data, np.ones((2, 1)))
+    assert np.allclose(result_a.data, result_a_pt.data.numpy())
