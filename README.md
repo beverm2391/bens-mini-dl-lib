@@ -46,7 +46,7 @@ This adds a .pth file to the site-packages directory containing the project's ro
   - [X] write a test for max with axis and keepdims
   - [X] write softmax and log softmax forward test
   - [X] fix BinaryCELoss test
-  - [ ] write log softmax func and test
+  - [X] write log softmax func and test
   - [ ] write negative log likelihood func and test
   - [ ] write CCELoss
   - [ ] get CatCELoss test passing

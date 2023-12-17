@@ -116,15 +116,16 @@ class Softmax(Module):
         shiftx = x - x.max(axis=-1, keepdims=True) # Subtract the max of x.data along the last axis for numerical stability.
         exps = shiftx.exp() # get exponential of shifted data
         out = exps / exps.sum(axis=-1, keepdims=True) # Normalize along the last axis so they sum to 1 (making a prob distribution)
-        
+
         # ! Since each operation has its own backward method, we don't need to define one here!
         return out
 
-# TODO - needs individual test, but tested as part of test_CategoricalCrossEntropyLoss
 class LogSoftmax(Module):
     @force_tensor_method
     def forward(self, x: Tensor) -> Tensor:
-        raise NotImplementedError
+        shiftx = x - x.max(axis=-1, keepdims=True)
+        out = shiftx - shiftx.exp().sum(axis=-1, keepdims=True).log()
+        return out
 
 # TODO - needs individual test, but tested as part of test_CategoricalCrossEntropyLoss
 class NegativeLogLikelihoodLoss(Module):
