@@ -42,17 +42,17 @@ This adds a .pth file to the site-packages directory containing the project's ro
   - [X] fix clip test
   - [X] write a test for dot product
   - [X] write a test for sum with axis and keepdims
-  - [ ] add keepdims to sum, max
-  - [ ] write a test for max with axis and keepdims
-  - [ ] add keepdims to rest of reduction ops
+  - [X] add keepdims to sum, max
+  - [X] write a test for max with axis and keepdims
+
   - [ ] write softmax and log softmax forward test
-  - [ ] write backward methods
   - [X] fix BinaryCELoss test
   - [ ] write CCELoss
     - [ ] write LogSoftmax, add forward and backword tests
     - [ ] write NegativeLogLikelihood, add forward and backword tests
   - [ ] get CatCELoss test passing
 
+- [ ] add keepdims to rest of reduction ops**
 - [ ] add a simple dataloader, with option to load all in memory at once
 - [ ] write tests for the sequential model class
 - [ ] figure out what basic layers I need to implement

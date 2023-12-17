@@ -277,6 +277,26 @@ class TestReductionOps:
         assert np.allclose(b.grad, b_torch.grad.numpy()), f"Expected {b_torch.grad.numpy()} but got {b.grad}"
 
     @staticmethod
+    def test_max_keepdims():
+        data1 = np.random.rand(2, 3)
+        data2 = np.random.rand(2, 3)
+
+        a = Tensor(data1, requires_grad=True)
+        b = Tensor(data2, requires_grad=True)
+
+        c = a.max(axis=1, keepdims=True)
+        d = b.max(axis=1, keepdims=True)
+
+        a_torch = torch.tensor(data1, dtype=torch.float32, requires_grad=True)
+        b_torch = torch.tensor(data2, dtype=torch.float32, requires_grad=True)
+
+        c_torch = a_torch.max(axis=1, keepdim=True)
+        d_torch = b_torch.max(axis=1, keepdim=True)
+
+        assert np.allclose(c.data, ct:=c_torch.values.data.numpy()), f"Expected {ct} but got {c}"
+        assert np.allclose(d.data, dt:=d_torch.values.data.numpy()), f"Expected {dt} but got {d}"
+
+    @staticmethod
     def test_mean():
         data1 = np.random.rand(2, 3)
         data2 = np.random.rand(2, 3)
