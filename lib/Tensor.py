@@ -137,9 +137,6 @@ class Tensor:
     # ! Main Ops ==============================================================
     @make_tensor
     def __add__(self, other: Tensor) -> Tensor:
-        """
-        Updated add method to handle reshape error
-        """
         out = np.add(self.data, other.data)
         out = Tensor(out, (self, other), 'add', requires_grad=self.requires_grad or other.requires_grad)
 
@@ -167,7 +164,7 @@ class Tensor:
                     axis_to_sum = tuple(range(out.grad.ndim - 1))
                     self.grad += np.sum(out.grad, axis=axis_to_sum)
                 else:
-                    self.grad += out.grad
+                    self.grad += out.grad 
 
                 # If other is a bias (1D tensor), sum gradients over all dimensions except the bias dimension
                 if other.data.ndim == 1:
@@ -180,6 +177,24 @@ class Tensor:
             else:
                 self.grad += out.grad
                 other.grad += out.grad
+            # # ! OLD =========================================================
+            # # Case 4: both are tensors but different shapes (hardest case)
+            # # ? Can't use reshape like i did first becaus it cant handle different sized tensors
+            # elif self.data.shape != other.data.shape:
+            #     # Identify the axis that should be summed over
+            #     sum_axes_self = tuple(np.nonzero(np.array(self.data.shape) < np.array(out.data.shape))[0])
+            #     sum_axes_other = tuple(np.nonzero(np.array(other.data.shape) < np.array(out.data.shape))[0])
+            #     # Update the gradients for self and other
+            #     if sum_axes_self:
+            #         self.grad += np.sum(out.grad, axis=sum_axes_self).reshape(self.data.shape)
+            #     else:
+            #         self.grad += out.grad
+
+            #     if sum_axes_other:
+            #         other.grad += np.sum(out.grad, axis=sum_axes_other).reshape(other.data.shape)
+            #     else:
+            #         other.grad = other.grad + out.grad # ! I changed this from in place because i was getting a broadcasting error
+            # # ! OLD =========================================================
 
         if self.is_grad():  # if we are in a no_grad context manager, don't add the backward method (thus making it a no-op)
             out._backward = _backward
